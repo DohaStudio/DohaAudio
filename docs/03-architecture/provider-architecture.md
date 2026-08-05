@@ -52,7 +52,7 @@ DohaMusic이 Workspace Asset와 AssetVersion의 최종 소유자입니다. DohaA
 
 ## Job 상태 초안
 
-공통 상태는 `pending`, `running`, `succeeded`, `failed`, `canceled`를 사용합니다. 취소 요청과 재시도 예약은 상태를 늘리지 않고 별도 시각·사유·시도 Metadata로 표현합니다. 상세 enum과 오류 schema는 Provider API 구현 전에 DohaStudio 공통 명세와 함께 확정해야 합니다.
+공통 상태는 `pending`, `running`, `succeeded`, `failed`, `canceled`를 사용합니다. 취소 요청과 재시도 예약은 상태를 늘리지 않고 별도 시각·사유·시도 Metadata로 표현합니다. 상세 enum과 오류 schema는 [DohaStudio 공통 Provider 계약](https://github.com/DohaStudio/.github/blob/develop/docs/specifications/04-provider-contract.md)을 기준으로 Runtime API 구현 전에 확정해야 합니다.
 
 ## 관련 결정
 

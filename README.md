@@ -65,6 +65,8 @@ flowchart LR
 
 ## 문서
 
+- [DohaStudio 공통 Provider 계약](https://github.com/DohaStudio/.github/blob/develop/docs/specifications/04-provider-contract.md)
+- [DohaStudio 공통 용어](https://github.com/DohaStudio/.github/blob/develop/docs/specifications/10-common-terms.md)
 - [문서 인덱스](docs/index.md)
 - [Roadmap](ROADMAP.md)
 - [프로젝트 범위](docs/00-overview/project-scope.md)
