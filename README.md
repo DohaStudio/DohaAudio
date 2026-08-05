@@ -26,11 +26,11 @@ DohaAudio는 Frontend, Next.js, 사용자·회원, Workspace, Project, Lyrics, R
 
 | DohaAudio | DohaMusic |
 |---|---|
-| Music Generation, Instrumental | Workspace, Project |
-| Stem Separation, Audio Analysis | Lyrics, Recording |
-| Dataset, Training, Evaluation | Asset와 AssetVersion 관리 |
+| 음악 생성·Instrumental | Workspace·Project |
+| Stem 분리·오디오 분석 | 가사·Recording |
+| Dataset·학습·평가 | Asset와 AssetVersion 관리 |
 | Model Manifest, Runtime | Composition Snapshot |
-| Provider API | Mix, Export, Provider Orchestration |
+| Provider API | Mix·Export·Provider Orchestration |
 
 Provider끼리는 직접 호출하지 않습니다. DohaAudio 작업은 반드시 DohaMusic 제품 서비스와 Workspace·Job Orchestrator가 생성하고 결과를 회수합니다. DohaAudio가 DohaVocal 또는 DohaLM을 직접 호출하는 흐름은 금지합니다.
 
