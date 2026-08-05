@@ -3,6 +3,8 @@
 > 문서 상태: [계획]
 > 구현 상태: Music Generator, Training, Runtime, Provider API 모두 [미구현]
 > 저장소: `DohaStudio/DohaAudio`
+> 공통 명세: `0.1.0` / `draft-baseline`
+> 명세 기준: `DohaStudio/.github` `main` (`1e4b480c8cbd6e51835f8550e685e9b136d8071d`)
 
 DohaAudio는 DohaMusic을 위한 음악 생성 및 일반 Audio AI Provider 프로젝트입니다. Music Generation뿐 아니라 Instrumental Generation, Stem Separation, Music Analysis, Dataset Pipeline, Training, Fine-tuning, Evaluation, Model Manifest와 독립 Runtime을 담당할 계획입니다.
 
@@ -34,13 +36,15 @@ DohaAudio는 Frontend, Next.js, 사용자·회원, Workspace, Project, Lyrics, R
 
 Provider끼리는 직접 호출하지 않습니다. DohaAudio 작업은 반드시 DohaMusic 제품 서비스와 Workspace·Job Orchestrator가 생성하고 결과를 회수합니다. DohaAudio가 DohaVocal 또는 DohaLM을 직접 호출하는 흐름은 금지합니다.
 
-`MusicGenerationJob`과 `StemSeparationJob`은 서로 독립된 Job입니다. 음악 생성 성공이 Stem 분리를 자동 실행한다는 의미가 아니며, DohaMusic이 Workspace 상태와 사용자 요청에 따라 각각 생성·연결합니다.
+`MusicGenerationJob`, `StemSeparationJob`, `AudioAnalysisJob`, `EvaluationJob`은 서로 독립된 Job입니다. 한 Job의 성공이 다른 Job을 자동 실행한다는 의미가 아니며, DohaMusic이 저장된 AssetVersion과 Artifact를 입력으로 지정하여 Workspace 상태와 사용자 요청에 따라 각각 생성·연결합니다.
 
 ```mermaid
 flowchart LR
     DM[DohaMusic Workspace·Job Orchestrator]
     MGJ[MusicGenerationJob]
     SSJ[StemSeparationJob]
+    AAJ[AudioAnalysisJob]
+    EVJ[EvaluationJob]
     RT[DohaAudio Runtime - 계획]
     MG[Music Generation - 계획]
     SS[Stem Separation - 계획]
@@ -48,6 +52,8 @@ flowchart LR
 
     DM --> MGJ --> RT
     DM --> SSJ --> RT
+    DM --> AAJ --> RT
+    DM --> EVJ --> RT
     RT --> MG --> ASSET --> DM
     RT --> SS --> ASSET
 ```
@@ -63,10 +69,13 @@ flowchart LR
 
 절대 경로는 코드와 Manifest에 하드코딩하지 않으며 환경 변수 또는 논리 식별자로 주입합니다.
 
+`DohaArtifacts/audio`는 `checkpoints`, `models`, `generations`, `stems`, `evaluations`, `runs` 영역에 Provider의 모델·실행 결과를 보관합니다. Mix, Export, Preview, Composition Snapshot 같은 Workspace 최종 결과는 DohaMusic 책임이며 `DohaArtifacts/music`에 보관합니다. 두 영역을 서로 대체하거나 중복 저장하지 않습니다.
+
 ## 문서
 
-- [DohaStudio 공통 Provider 계약](https://github.com/DohaStudio/.github/blob/develop/docs/specifications/04-provider-contract.md)
-- [DohaStudio 공통 용어](https://github.com/DohaStudio/.github/blob/develop/docs/specifications/10-common-terms.md)
+- [DohaStudio 공통 명세 기준선](https://github.com/DohaStudio/.github/tree/main/docs/specifications)
+- [DohaStudio 공통 Provider 계약](https://github.com/DohaStudio/.github/blob/main/docs/specifications/04-provider-contract.md)
+- [DohaStudio 공통 용어](https://github.com/DohaStudio/.github/blob/main/docs/specifications/10-common-terms.md)
 - [문서 인덱스](docs/index.md)
 - [Roadmap](ROADMAP.md)
 - [프로젝트 범위](docs/00-overview/project-scope.md)
@@ -88,4 +97,5 @@ flowchart LR
 
 - 기여 절차: [CONTRIBUTING.md](CONTRIBUTING.md)
 - 변경 이력: [CHANGELOG.md](CHANGELOG.md)
-- 라이선스: [검토 필요](LICENSE). 공개 열람은 사용·복제·재배포 허가를 의미하지 않습니다.
+- 코드와 문서 라이선스: [Apache License 2.0](LICENSE)
+- Dataset, 외부 모델, 모델 가중치, Checkpoint, Adapter, 생성 음원, Stem 결과, 평가 샘플과 제3자 콘텐츠에는 저장소의 Apache-2.0이 적용되지 않으며 각 항목의 별도 권리와 라이선스를 따릅니다.
