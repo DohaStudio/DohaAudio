@@ -1,4 +1,4 @@
-# ADR-003: Dataset Policy
+# ADR-003: Dataset 정책
 
 - 상태: 제안됨 [계획]
 - 작성일: 2026-08-05

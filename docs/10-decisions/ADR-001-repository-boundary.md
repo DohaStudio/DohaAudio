@@ -1,4 +1,4 @@
-# ADR-001: Repository Boundary
+# ADR-001: 저장소 책임 경계
 
 - 상태: 제안됨 [계획]
 - 작성일: 2026-08-05
@@ -11,7 +11,7 @@ DohaMusic은 개인 AI 음악 제작 Workspace이며 Audio 모델의 Dataset, Tr
 
 ## 결정
 
-DohaAudio가 Music Generation, Instrumental, Stem Separation, Audio Analysis, Dataset, Training, Evaluation, Model Manifest와 Runtime을 소유합니다. DohaMusic은 사용자, Workspace, Project, Lyrics, Recording, Asset, Composition Snapshot, Mix, Export와 Pipeline Orchestration을 소유합니다.
+DohaAudio가 Music Generation, Instrumental, Stem Separation, Audio Analysis, Dataset, Training, Evaluation, Model Manifest와 Runtime을 소유합니다. DohaMusic은 사용자, Workspace, Project, Lyrics, Recording, Asset, Composition Snapshot, Mix, Export와 Workspace·Job Orchestration을 소유합니다.
 
 Voice Conversion과 Singing Voice는 계획된 DohaVocal, Lyrics Generation과 Analysis는 DohaLM 책임입니다.
 

@@ -1,4 +1,4 @@
-# ADR-002: Provider Contract
+# ADR-002: Provider 계약
 
 - 상태: 제안됨 [계획]
 - 작성일: 2026-08-05
@@ -11,13 +11,13 @@ Audio 작업은 장시간 실행되고 GPU와 대용량 Artifact를 사용합니
 
 ## 결정
 
-DohaMusic Pipeline Orchestrator만 DohaAudio를 호출합니다. DohaAudio는 DohaVocal과 DohaLM을 직접 호출하지 않습니다. 계약에는 Job 생성, 상태, 취소, 재시도, 오류, Health, capability와 API contract version을 포함합니다.
+DohaMusic 제품 서비스와 Workspace·Job Orchestrator만 DohaAudio를 호출합니다. DohaAudio는 DohaVocal과 DohaLM을 직접 호출하지 않습니다. 계약에는 Job 생성, 상태, 취소, 재시도, 오류, Health, capability와 API contract version을 포함합니다.
 
 결과는 로컬 절대 경로 대신 Artifact ID 또는 승인된 URI, checksum과 Metadata로 반환합니다. GPU admission control과 Provider 실행 순서는 DohaMusic이 관리합니다.
 
 ## 선택 이유
 
-단일 Orchestrator가 사용자 권한, Pipeline 상태와 GPU 경쟁을 일관되게 관리할 수 있습니다.
+단일 Workspace·Job Orchestrator가 사용자 권한, Job 상태와 GPU 경쟁을 일관되게 관리할 수 있습니다.
 
 ## 대안
 

@@ -1,4 +1,4 @@
-# Contributing to DohaAudio
+# DohaAudio 기여 안내
 
 ## 브랜치
 
@@ -16,6 +16,6 @@
 - 모델 성능, VRAM, 라이선스 및 상업 이용 가능 여부를 추측하지 않습니다.
 - Provider가 다른 Provider를 직접 호출하는 코드를 추가하지 않습니다.
 
-## Pull Request
+## Pull Request 작성
 
 PR 대상은 `develop`입니다. 본문에는 작업 내용, 변경 파일, 검증 결과, 문서 영향, 미구현·후속 작업을 기록합니다. 구현 변경에는 관련 테스트, 문서와 `CHANGELOG.md`를 포함합니다.

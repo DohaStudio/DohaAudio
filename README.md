@@ -22,7 +22,7 @@ DohaAudio는 DohaMusic을 위한 음악 생성 및 일반 Audio AI Provider 프�
 
 DohaAudio는 Frontend, Next.js, 사용자·회원, Workspace, Project, Lyrics, Recording, Composition Snapshot, Mix, Export, Voice Conversion, Singing Voice, Lyrics Generation을 담당하지 않습니다.
 
-## Repository Boundary
+## 저장소 책임 경계
 
 | DohaAudio | DohaMusic |
 |---|---|
@@ -32,18 +32,24 @@ DohaAudio는 Frontend, Next.js, 사용자·회원, Workspace, Project, Lyrics, R
 | Model Manifest, Runtime | Composition Snapshot |
 | Provider API | Mix, Export, Provider Orchestration |
 
-Provider끼리는 직접 호출하지 않습니다. DohaAudio 작업은 반드시 DohaMusic Pipeline Orchestrator가 생성하고 결과를 회수합니다. DohaAudio가 DohaVocal 또는 DohaLM을 직접 호출하는 흐름은 금지합니다.
+Provider끼리는 직접 호출하지 않습니다. DohaAudio 작업은 반드시 DohaMusic 제품 서비스와 Workspace·Job Orchestrator가 생성하고 결과를 회수합니다. DohaAudio가 DohaVocal 또는 DohaLM을 직접 호출하는 흐름은 금지합니다.
+
+`MusicGenerationJob`과 `StemSeparationJob`은 서로 독립된 Job입니다. 음악 생성 성공이 Stem 분리를 자동 실행한다는 의미가 아니며, DohaMusic이 Workspace 상태와 사용자 요청에 따라 각각 생성·연결합니다.
 
 ```mermaid
 flowchart LR
-    DM[DohaMusic Pipeline Orchestrator]
-    JOB[Create Music Job]
+    DM[DohaMusic Workspace·Job Orchestrator]
+    MGJ[MusicGenerationJob]
+    SSJ[StemSeparationJob]
     RT[DohaAudio Runtime - 계획]
     MG[Music Generation - 계획]
     SS[Stem Separation - 계획]
     ASSET[Music / Stem / Analysis Result]
 
-    DM --> JOB --> RT --> MG --> SS --> ASSET --> DM
+    DM --> MGJ --> RT
+    DM --> SSJ --> RT
+    RT --> MG --> ASSET --> DM
+    RT --> SS --> ASSET
 ```
 
 ## 외부 저장소 정책

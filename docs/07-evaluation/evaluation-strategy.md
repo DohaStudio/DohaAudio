@@ -1,4 +1,4 @@
-# Evaluation 전략
+# 평가 전략
 
 > 문서 상태: [계획]
 > Evaluation pipeline: [미구현]

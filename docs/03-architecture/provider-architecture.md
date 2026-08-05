@@ -1,4 +1,4 @@
-# Provider Architecture
+# Provider 아키텍처
 
 > 문서 상태: [계획]
 > Runtime·Provider API 상태: [미구현]
@@ -26,7 +26,9 @@ flowchart TB
     DA -->|Artifact ID와 Provider Metadata| DM
 ```
 
-DohaAudio는 DohaVocal과 DohaLM을 직접 호출하지 않습니다. 여러 Provider의 결과 결합, 순서, 취소, GPU admission과 최종 Workspace 상태는 DohaMusic Pipeline Orchestrator가 관리합니다.
+DohaAudio는 DohaVocal과 DohaLM을 직접 호출하지 않습니다. 여러 Provider의 결과 결합, 순서, 취소, GPU admission과 최종 Workspace 상태는 DohaMusic 제품 서비스와 Workspace·Job Orchestrator가 관리합니다.
+
+`MusicGenerationJob`과 `StemSeparationJob`은 독립된 Job 계약입니다. 둘은 입력·출력 AssetVersion과 Artifact를 통해 연결할 수 있지만 DohaAudio 내부에서 한 Job이 다른 Job을 암묵적으로 실행하지 않습니다.
 
 ## 계층 목표
 
@@ -50,7 +52,7 @@ DohaMusic이 Workspace Asset와 AssetVersion의 최종 소유자입니다. DohaA
 
 ## Job 상태 초안
 
-`QUEUED`, `RUNNING`, `SUCCEEDED`, `FAILED`, `CANCEL_REQUESTED`, `CANCELLED`, `RETRY_SCHEDULED`를 후보로 둡니다. 최종 enum과 오류 schema는 Provider API 구현 전 DohaMusic 계약과 함께 확정해야 합니다.
+공통 상태는 `pending`, `running`, `succeeded`, `failed`, `canceled`를 사용합니다. 취소 요청과 재시도 예약은 상태를 늘리지 않고 별도 시각·사유·시도 Metadata로 표현합니다. 상세 enum과 오류 schema는 Provider API 구현 전에 DohaStudio 공통 명세와 함께 확정해야 합니다.
 
 ## 관련 결정
 

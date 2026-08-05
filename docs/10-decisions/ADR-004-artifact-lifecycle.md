@@ -1,4 +1,4 @@
-# ADR-004: Artifact Lifecycle
+# ADR-004: Artifact 수명 주기
 
 - 상태: 제안됨 [계획]
 - 작성일: 2026-08-05
