@@ -1,0 +1,12 @@
+# 아키텍처 결정 기록
+
+> 문서 상태: [계획]
+
+| ADR | 제목 | 상태 |
+|---|---|---|
+| [ADR-001](ADR-001-repository-boundary.md) | Repository Boundary | 제안됨 |
+| [ADR-002](ADR-002-provider-contract.md) | Provider Contract | 제안됨 |
+| [ADR-003](ADR-003-dataset-policy.md) | Dataset Policy | 제안됨 |
+| [ADR-004](ADR-004-artifact-lifecycle.md) | Artifact Lifecycle | 제안됨 |
+
+결정이 대체되면 기존 ADR을 삭제하지 않고 상태와 대체 ADR 링크를 기록합니다.

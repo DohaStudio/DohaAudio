@@ -1,0 +1,48 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Python and tooling
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Local Dataset, Artifact and Temp roots
+/data/
+/datasets/
+/artifacts/
+/outputs/
+/output/
+/temp/
+/tmp/
+/cache/
+/checkpoints/
+/models/
+/runs/
+
+# Model weights and checkpoints
+*.ckpt
+*.pt
+*.pth
+*.safetensors
+*.onnx
+
+# Audio and generated media
+*.wav
+*.mp3
+*.flac
+*.m4a
+*.aac
+*.ogg
+*.webm
+
+# OS and editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
