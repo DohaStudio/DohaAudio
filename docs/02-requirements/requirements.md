@@ -1,7 +1,7 @@
 # DohaAudio 요구사항
 
 > 문서 상태: [계획]
-> 구현 상태: 모든 요구사항 [미구현]
+> 구현 상태: Runtime Foundation 관련 요구사항 [구현], 실제 AI·Dataset·Training [미구현]
 
 ## 기능 요구사항
 
@@ -15,10 +15,10 @@
 | FR-006 | Dataset Pipeline이 raw, interim, processed, manifest, split, license를 구분해야 한다. | [계획] |
 | FR-007 | Training과 Fine-tuning Run을 재현 가능한 식별자로 기록해야 한다. | [계획] |
 | FR-008 | 모델별 Evaluation 결과와 Model Manifest를 연결해야 한다. | [계획] |
-| FR-009 | Runtime 작업의 생성, 상태, 취소, 재시도와 오류를 표현해야 한다. | [계획] |
-| FR-010 | Provider API 계약 버전을 명시해야 한다. | [계획] |
-| FR-011 | 결과를 경로가 아닌 Asset/Artifact 식별자와 Metadata로 반환해야 한다. | [계획] |
-| FR-012 | 다른 AI Provider를 직접 호출하지 않아야 한다. | [계획] |
+| FR-009 | Runtime 작업의 생성, 상태, 취소, 재시도와 오류를 표현해야 한다. | [구현] |
+| FR-010 | Provider API 계약 버전을 명시해야 한다. | [구현] |
+| FR-011 | 결과를 경로가 아닌 Asset/Artifact 식별자와 Metadata로 반환해야 한다. | [구현] |
+| FR-012 | 다른 AI Provider를 직접 호출하지 않아야 한다. | [구현] |
 
 ## 비기능 요구사항
 

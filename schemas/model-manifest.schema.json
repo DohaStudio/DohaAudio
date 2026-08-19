@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/DohaStudio/DohaAudio/schemas/model-manifest.schema.json",
+  "title": "DohaAudio Model Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "model_manifest_id",
+    "provider_id",
+    "model_id",
+    "model_version",
+    "checkpoint_version",
+    "model_type",
+    "capabilities",
+    "input_formats",
+    "output_formats",
+    "api_contract_version",
+    "dataset_manifest_id",
+    "training_run_id",
+    "evaluation_result_id",
+    "license_status",
+    "commercial_usage_status",
+    "recommended_vram",
+    "runtime_environment",
+    "artifact_checksum",
+    "created_at"
+  ],
+  "properties": {
+    "model_manifest_id": {"type": "string", "minLength": 1},
+    "provider_id": {"type": "string", "minLength": 1},
+    "model_id": {"type": "string", "minLength": 1},
+    "model_version": {"type": "string", "minLength": 1},
+    "checkpoint_version": {"type": "string", "minLength": 1},
+    "model_type": {"type": "string", "minLength": 1},
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "enum": ["music_generation", "stem_separation", "audio_analysis"]
+      },
+      "uniqueItems": true
+    },
+    "input_formats": {"type": "array", "items": {"type": "string"}},
+    "output_formats": {"type": "array", "items": {"type": "string"}},
+    "api_contract_version": {"type": "string", "minLength": 1},
+    "dataset_manifest_id": {"type": ["string", "null"]},
+    "training_run_id": {"type": ["string", "null"]},
+    "evaluation_result_id": {"type": ["string", "null"]},
+    "license_status": {
+      "enum": ["UNKNOWN", "REVIEW_REQUIRED", "NOT_APPLICABLE"]
+    },
+    "commercial_usage_status": {
+      "enum": ["UNKNOWN", "REVIEW_REQUIRED", "NOT_APPLICABLE"]
+    },
+    "recommended_vram": {"type": ["string", "null"]},
+    "runtime_environment": {
+      "type": "object",
+      "additionalProperties": {"type": "string"}
+    },
+    "artifact_checksum": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "created_at": {"type": "string", "format": "date-time"}
+  }
+}

@@ -10,8 +10,8 @@
 | 4 | Music Generation | [계획] | 교체 가능한 Music Generator와 Instrumental 기능 |
 | 5 | Stem Separation | [계획] | Stem 모델 Adapter와 출력 계약 |
 | 6 | Music Analysis | [계획] | BPM, Key, Structure, Audio Quality 분석 |
-| 7 | Runtime | [계획] | 독립 Runtime, 작업 상태·취소·재시도 |
-| 8 | Provider API | [계획] | 버전이 지정된 DohaMusic 연동 API |
+| 7 | Runtime | [진행 중] | Fake Runtime Foundation [구현], 실제 모델 Runtime [미구현] |
+| 8 | Provider API | [진행 중] | 계약 API [구현], DohaMusic 실제 연동 [미구현] |
 | 9 | Evaluation | [계획] | 모델별 정량·정성 평가와 회귀 기준 |
 | 10 | Stable Release | [계획] | 고정 계약, 운영 문서, 릴리스 검증 |
 
@@ -26,4 +26,4 @@
 
 ## 현재 범위
 
-이번 bootstrap은 향후 Phase를 정의하는 문서 작업일 뿐 Phase 1 완료 판정이 아닙니다. Dataset Migration, 모델 다운로드, Training, Music Generation, Runtime 및 Provider API 구현은 수행하지 않았습니다.
+학습 전 Runtime Foundation은 in-memory persistence와 Fake Provider 범위에서 구현했습니다. 이는 Phase 7·8 전체 완료 판정이 아닙니다. Dataset Migration, 모델 다운로드, Training, 실제 Music Generation·Stem Separation·Audio Analysis, GPU Runtime과 DohaMusic 실제 연동은 수행하지 않았습니다.
