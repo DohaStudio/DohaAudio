@@ -19,4 +19,4 @@
 
 Provider 인증·권한 계약은 DohaMusic과 함께 확정해야 합니다. DohaAudio는 다른 Provider로 요청을 전달하지 않으며, 오류 응답과 log에 비밀정보 또는 Dataset 내용을 포함하지 않습니다.
 
-Runtime은 Windows·Linux·UNC·home 절대 경로와 `token`, `secret`, `api_key`, `credential`, `password` 설정 key를 요청에서 거부합니다. API validation과 내부 예외는 stack trace, raw exception과 payload를 반향하지 않는 구조화된 오류로 변환합니다. 자동 테스트는 경로·비밀정보·stack trace 비노출을 검증합니다.
+Runtime은 Windows·Linux·UNC·home 절대 경로와 `file:` URI를 거부합니다. `token`, `secret`, `api_key`, `credential`, `password` 및 `access_token`, `client_secret`, `api-key` 같은 변형 설정 key도 요청에서 거부합니다. API validation과 내부 예외는 stack trace, raw exception과 payload를 반향하지 않는 구조화된 오류로 변환합니다. 자동 테스트는 경로·비밀정보·stack trace 비노출을 검증합니다.

@@ -52,7 +52,7 @@ Provider 출력, Workspace 결과와 임시 파일을 분리해 보존·삭제·
 
 ## 영향과 Migration
 
-현재 폴더와 파일은 생성하지 않습니다. Runtime 구현 전에 Artifact Metadata schema와 DohaMusic 인수 계약을 먼저 확정하고 capability별로 도입합니다.
+실제 Artifact 폴더와 payload 파일은 아직 생성하지 않습니다. 학습 전 Runtime Foundation에는 공통 필드를 따르는 Artifact Metadata와 in-memory catalog만 도입했으며, 실제 저장소와 DohaMusic 인수 계약은 capability별 후속 작업에서 확정합니다.
 
 ## 재검토 조건
 

@@ -84,3 +84,22 @@ def test_absolute_path_and_secret_settings_are_rejected(
             make_request(job_id="job-secret", settings_snapshot={"api_key": "not-a-secret"})
         )
     assert secret_error.value.error_code == "UNSAFE_REQUEST_METADATA"
+
+
+@pytest.mark.parametrize("key", ["access_token", "client_secret", "api-key", "db.password"])
+def test_secret_setting_key_variants_are_rejected(
+    runtime: AudioRuntime,
+    make_request: Callable[..., CreateJobRequest],
+    key: str,
+) -> None:
+    with pytest.raises(ContractError) as exc_info:
+        runtime.create_job(make_request(settings_snapshot={key: "test-only-value"}))
+    assert exc_info.value.error_code == "UNSAFE_REQUEST_METADATA"
+
+
+def test_file_uri_is_rejected(
+    runtime: AudioRuntime, make_request: Callable[..., CreateJobRequest]
+) -> None:
+    with pytest.raises(ContractError) as exc_info:
+        runtime.create_job(make_request(settings_snapshot={"model_uri": "file:///private/model"}))
+    assert exc_info.value.error_code == "ABSOLUTE_PATH_FORBIDDEN"

@@ -38,10 +38,16 @@ WINDOWS_ABSOLUTE_PATH = re.compile(r"^[A-Za-z]:[\\/]")
 SENSITIVE_SETTING_KEYS = frozenset(
     {"api_key", "apikey", "authorization", "credential", "password", "secret", "token"}
 )
+SENSITIVE_SETTING_SUFFIXES = ("_api_key", "_credential", "_password", "_secret", "_token")
+
+
+def _is_sensitive_setting_key(key: str) -> bool:
+    normalized = re.sub(r"[^a-z0-9]+", "_", key.casefold()).strip("_")
+    return normalized in SENSITIVE_SETTING_KEYS or normalized.endswith(SENSITIVE_SETTING_SUFFIXES)
 
 
 def _assert_safe_value(value: Any, *, key: str | None = None) -> None:
-    if key is not None and key.casefold() in SENSITIVE_SETTING_KEYS:
+    if key is not None and _is_sensitive_setting_key(key):
         raise ContractError("UNSAFE_REQUEST_METADATA", "비밀정보 필드는 요청할 수 없습니다.")
     if isinstance(value, dict):
         for child_key, child_value in value.items():
@@ -50,7 +56,9 @@ def _assert_safe_value(value: Any, *, key: str | None = None) -> None:
         for child in value:
             _assert_safe_value(child)
     elif isinstance(value, str) and (
-        WINDOWS_ABSOLUTE_PATH.match(value) or value.startswith(("/", "~/", "~\\", "\\\\"))
+        WINDOWS_ABSOLUTE_PATH.match(value)
+        or value.startswith(("/", "~/", "~\\", "\\\\"))
+        or value.casefold().startswith("file:")
     ):
         raise ContractError(
             "ABSOLUTE_PATH_FORBIDDEN", "절대 경로는 Provider 계약에 사용할 수 없습니다."
@@ -82,11 +90,12 @@ class JobApplicationService:
         self.capabilities = capabilities
 
     def create_job(self, request: CreateJobRequest) -> JobResponse:
-        self._validate_request(request)
+        self._validate_request_metadata(request)
         fingerprint = _canonical_fingerprint(request)
         replay = self.jobs.idempotent_job(request.idempotency_key, fingerprint)
         if replay is not None:
             return JobResponse.from_record(replay)
+        self._validate_new_job(request)
         record = self._new_record(request, fingerprint=fingerprint)
         persisted = self.jobs.add(record)
         return JobResponse.from_record(persisted)
@@ -252,7 +261,7 @@ class JobApplicationService:
             reason=None if ready else "provider_or_manifest_not_ready",
         )
 
-    def _validate_request(self, request: CreateJobRequest) -> None:
+    def _validate_request_metadata(self, request: CreateJobRequest) -> None:
         _assert_safe_value(request.model_dump(mode="python"))
         if request.provider_id != PROVIDER_ID:
             raise ContractError("PROVIDER_MISMATCH", "요청 Provider가 DohaAudio가 아닙니다.")
@@ -261,6 +270,8 @@ class JobApplicationService:
                 "PROVIDER_CONTRACT_VERSION_UNSUPPORTED",
                 "지원하지 않는 Provider contract version입니다.",
             )
+
+    def _validate_new_job(self, request: CreateJobRequest) -> None:
         provider = self.providers.get(request.provider_id)
         if not provider.readiness():
             raise ContractError(

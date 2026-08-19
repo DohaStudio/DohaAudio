@@ -29,7 +29,7 @@ flowchart TB
 
 DohaAudio는 DohaVocal과 DohaLM을 직접 호출하지 않습니다. 여러 Provider의 결과 결합, 순서, 취소, GPU admission과 최종 Workspace 상태는 DohaMusic 제품 서비스와 Workspace·Job Orchestrator가 관리합니다.
 
-`MusicGenerationJob`, `StemSeparationJob`, `AudioAnalysisJob`, `EvaluationJob`은 독립된 Job 계약입니다. 각 Job은 저장된 입력·출력 AssetVersion과 Artifact를 통해 연결할 수 있지만 DohaAudio 내부에서 한 Job이 다른 Job을 암묵적으로 실행하지 않습니다. 고정된 일괄 Pipeline 순서를 Provider가 결정하지 않습니다.
+`MusicGenerationJob`, `StemSeparationJob`, `AudioAnalysisJob`, `EvaluationJob`은 독립된 Job 계약입니다. 현재 Runtime Foundation 구현 범위는 앞의 세 Job이며 `EvaluationJob`은 `[계획]`입니다. 각 Job은 저장된 입력·출력 AssetVersion과 Artifact를 통해 연결할 수 있지만 DohaAudio 내부에서 한 Job이 다른 Job을 암묵적으로 실행하지 않습니다. 고정된 일괄 Pipeline 순서를 Provider가 결정하지 않습니다.
 
 ## 구현 계층
 

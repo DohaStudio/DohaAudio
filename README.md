@@ -37,7 +37,7 @@ DohaAudio는 Frontend, Next.js, 사용자·회원, Workspace, Project, Lyrics, R
 
 Provider끼리는 직접 호출하지 않습니다. DohaAudio 작업은 반드시 DohaMusic 제품 서비스와 Workspace·Job Orchestrator가 생성하고 결과를 회수합니다. DohaAudio가 DohaVocal 또는 DohaLM을 직접 호출하는 흐름은 금지합니다.
 
-`MusicGenerationJob`, `StemSeparationJob`, `AudioAnalysisJob`, `EvaluationJob`은 서로 독립된 Job입니다. 한 Job의 성공이 다른 Job을 자동 실행한다는 의미가 아니며, DohaMusic이 저장된 AssetVersion과 Artifact를 입력으로 지정하여 Workspace 상태와 사용자 요청에 따라 각각 생성·연결합니다.
+`MusicGenerationJob`, `StemSeparationJob`, `AudioAnalysisJob`, `EvaluationJob`은 서로 독립된 Job입니다. 현재 Runtime Foundation은 앞의 세 Job만 구현하며 `EvaluationJob`은 `[계획]`입니다. 한 Job의 성공이 다른 Job을 자동 실행한다는 의미가 아니며, DohaMusic이 저장된 AssetVersion과 Artifact를 입력으로 지정하여 Workspace 상태와 사용자 요청에 따라 각각 생성·연결합니다.
 
 ```mermaid
 flowchart LR
@@ -45,7 +45,7 @@ flowchart LR
     MGJ[MusicGenerationJob]
     SSJ[StemSeparationJob]
     AAJ[AudioAnalysisJob]
-    EVJ[EvaluationJob]
+    EVJ[EvaluationJob - 계획]
     RT[DohaAudio Runtime Foundation - 구현]
     MG[Music Generation - 계획]
     SS[Stem Separation - 계획]
@@ -54,7 +54,8 @@ flowchart LR
     DM --> MGJ --> RT
     DM --> SSJ --> RT
     DM --> AAJ --> RT
-    DM --> EVJ --> RT
+    DM -. 계획 .-> EVJ
+    EVJ -. 계획 .-> RT
     RT --> MG --> ASSET --> DM
     RT --> SS --> ASSET
 ```

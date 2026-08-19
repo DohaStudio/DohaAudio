@@ -7,13 +7,22 @@ import pytest
 
 from dohaaudio.bootstrap import AudioRuntime, bootstrap_runtime
 from dohaaudio.contracts import CreateJobRequest, JobStatus, RetryJobRequest
-from dohaaudio.errors import ConflictError
+from dohaaudio.errors import ConflictError, ContractError
 from dohaaudio.providers import FakeAudioProvider
 
 
 class FailingFakeProvider(FakeAudioProvider):
     def execute(self, job):  # type: ignore[no-untyped-def]
         raise RuntimeError("C:\\private\\model token=secret stack trace")
+
+
+class ToggleReadyFakeProvider(FakeAudioProvider):
+    def __init__(self) -> None:
+        super().__init__()
+        self.accepting_jobs = True
+
+    def readiness(self) -> bool:
+        return self.accepting_jobs and self.health()
 
 
 def test_job_lifecycle_and_terminal_immutability(
@@ -59,6 +68,24 @@ def test_same_idempotency_key_and_request_replays_existing_job(
     replay = runtime.create_job(make_request(job_id="job-first"))
     assert replay.job_id == first.job_id
     assert runtime.jobs.count() == 1
+
+
+def test_idempotency_replay_does_not_depend_on_current_readiness(
+    make_request: Callable[..., CreateJobRequest],
+) -> None:
+    provider = ToggleReadyFakeProvider()
+    runtime = bootstrap_runtime(provider=provider)
+    request = make_request(job_id="job-readiness-replay", idempotency_key="idem-readiness")
+    first = runtime.create_job(request)
+    provider.accepting_jobs = False
+
+    replay = runtime.create_job(request)
+
+    assert replay.job_id == first.job_id
+    assert runtime.jobs.count() == 1
+    with pytest.raises(ContractError) as exc_info:
+        runtime.create_job(make_request(job_id="job-not-ready", idempotency_key="idem-not-ready"))
+    assert exc_info.value.error_code == "PROVIDER_NOT_READY"
 
 
 def test_idempotency_conflict_creates_no_partial_job(
