@@ -1,7 +1,7 @@
 # Provider 아키텍처
 
 > 문서 상태: [계획]
-> Runtime·Provider API 상태: [미구현]
+> Runtime Foundation·Provider API 상태: [구현]
 > 공통 명세: `0.1.0` / `draft-baseline`
 
 ## 호출 경계
@@ -31,14 +31,14 @@ DohaAudio는 DohaVocal과 DohaLM을 직접 호출하지 않습니다. 여러 Pro
 
 `MusicGenerationJob`, `StemSeparationJob`, `AudioAnalysisJob`, `EvaluationJob`은 독립된 Job 계약입니다. 각 Job은 저장된 입력·출력 AssetVersion과 Artifact를 통해 연결할 수 있지만 DohaAudio 내부에서 한 Job이 다른 Job을 암묵적으로 실행하지 않습니다. 고정된 일괄 Pipeline 순서를 Provider가 결정하지 않습니다.
 
-## 계층 목표
+## 구현 계층
 
 ```text
-Provider API
-→ Application Job Service
-→ Capability Interface
-→ Model Adapter
-→ Runtime / Artifact Storage
+FastAPI Provider API
+→ JobApplicationService
+→ AudioProvider capability interface
+→ FakeAudioProvider 또는 향후 Real Provider Adapter
+→ In-memory Job / Artifact / Model Manifest registry
 ```
 
 ## 출력 유형
@@ -51,9 +51,11 @@ Provider API
 
 DohaMusic이 Workspace Asset와 AssetVersion의 최종 소유자입니다. DohaAudio의 파일은 `DohaArtifacts/audio`에 있고 DohaMusic에는 Artifact ID, checksum, format, provenance와 상태를 반환합니다.
 
-## Job 상태 초안
+## Job 상태
 
-공통 상태는 `pending`, `running`, `succeeded`, `failed`, `canceled`를 사용합니다. 취소 요청과 재시도 예약은 상태를 늘리지 않고 별도 시각·사유·시도 Metadata로 표현합니다. 상세 enum과 오류 schema는 [DohaStudio 공통 Provider 계약](https://github.com/DohaStudio/.github/blob/main/docs/specifications/04-provider-contract.md)을 기준으로 Runtime API 구현 전에 확정해야 합니다. 재현 감사가 필요한 경우에는 기준 커밋 `1e4b480c8cbd6e51835f8550e685e9b136d8071d`를 사용합니다.
+공통 상태는 `queued`, `running`, `succeeded`, `failed`, `cancelled`입니다. 종료 상태는 되돌리지 않으며 Retry는 `retry_of_job_id`와 새 `job_id`를 가진 새 Job입니다. Fake Provider의 취소는 worker가 없는 Foundation 범위에서 즉시 최종 `cancelled`로 반영합니다. 재현 감사 기준은 공통 명세 commit `1e4b480c8cbd6e51835f8550e685e9b136d8071d`입니다.
+
+Provider Registry와 Capability Registry는 Provider 선택과 지원 capability 검증만 담당합니다. 여러 Provider 순서, GPU admission과 Workspace Selection은 구현하지 않으며 DohaMusic 책임으로 유지합니다.
 
 ## 관련 결정
 

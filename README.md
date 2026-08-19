@@ -1,14 +1,14 @@
 # DohaAudio
 
 > 문서 상태: [계획]
-> 구현 상태: Music Generator, Training, Runtime, Provider API 모두 [미구현]
+> 구현 상태: Runtime Foundation·Provider API·Fake Provider [구현], 실제 모델·Training [미구현]
 > 저장소: `DohaStudio/DohaAudio`
 > 공통 명세: `0.1.0` / `draft-baseline`
 > 명세 기준: `DohaStudio/.github` `main` (`1e4b480c8cbd6e51835f8550e685e9b136d8071d`)
 
 DohaAudio는 DohaMusic을 위한 음악 생성 및 일반 Audio AI Provider 프로젝트입니다. Music Generation뿐 아니라 Instrumental Generation, Stem Separation, Music Analysis, Dataset Pipeline, Training, Fine-tuning, Evaluation, Model Manifest와 독립 Runtime을 담당할 계획입니다.
 
-현재 저장소는 문서 기반 Architecture bootstrap 단계입니다. Dataset, 모델, Checkpoint, Runtime 코드와 생성 음원은 포함하지 않습니다.
+현재 저장소에는 학습 전 Provider Runtime Foundation이 구현되어 있습니다. In-memory Job·Artifact·Model Manifest registry와 deterministic Fake Provider로 계약을 검증하며 Dataset, 실제 모델, Checkpoint와 생성 음원은 포함하지 않습니다.
 
 ## 책임
 
@@ -17,8 +17,9 @@ DohaAudio는 DohaMusic을 위한 음악 생성 및 일반 Audio AI Provider 프�
 - BPM·Key·Music Structure·Audio Quality Analysis [계획]
 - Music Dataset Pipeline [계획]
 - Training·Fine-tuning·Evaluation [계획]
-- Checkpoint·Model Registry·Model Manifest 관리 [계획]
-- Runtime과 Provider API [계획]
+- Checkpoint·공통 Model Registry [계획], Provider-local Model Manifest registry [구현]
+- Runtime Foundation과 Provider API [구현]
+- 실제 모델 Adapter와 worker·영속 DB [미구현]
 
 ## 비목표
 
@@ -45,7 +46,7 @@ flowchart LR
     SSJ[StemSeparationJob]
     AAJ[AudioAnalysisJob]
     EVJ[EvaluationJob]
-    RT[DohaAudio Runtime - 계획]
+    RT[DohaAudio Runtime Foundation - 구현]
     MG[Music Generation - 계획]
     SS[Stem Separation - 계획]
     ASSET[Music / Stem / Analysis Result]
@@ -91,7 +92,15 @@ flowchart LR
 
 ## 개발 상태
 
-모든 Roadmap Phase는 현재 `[계획]`입니다. 구현·실험·성능·VRAM·라이선스는 실제 근거가 확보되기 전까지 완료 또는 검증됨으로 표현하지 않습니다.
+Runtime Foundation과 Provider API는 deterministic Fake Provider 기준으로 구현했습니다. `MusicGenerationJob`, `StemSeparationJob`, `AudioAnalysisJob`의 독립 lifecycle, idempotency, 취소, 새 Job 재시도, Artifact와 Manifest 불변성을 실제 모델 없이 검증합니다.
+
+```powershell
+python -m pip install -e ".[dev,runtime]"
+python -m uvicorn dohaaudio.api:app --app-dir src
+python -m pytest
+```
+
+API는 DohaMusic 목표 계약의 `/api/v1/providers/audio` namespace를 사용합니다. `CreateJob`은 `queued` Job만 생성하며 이 Foundation에는 자동 worker가 없습니다. Fake E2E에서는 application service의 `run_job`을 명시적으로 호출합니다. 실제 Dataset·모델·Checkpoint·GPU·성능·VRAM·라이선스와 DohaMusic network 통합은 여전히 `[미구현]` 또는 `[검증 필요]`입니다.
 
 ## 기여와 라이선스
 

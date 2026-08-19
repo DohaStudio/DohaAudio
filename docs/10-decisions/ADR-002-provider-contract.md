@@ -1,8 +1,8 @@
 # ADR-002: Provider 계약
 
-- 상태: 제안됨 [계획]
+- 상태: 승인됨 [구현]
 - 작성일: 2026-08-05
-- 최종 수정일: 2026-08-05
+- 최종 수정일: 2026-08-19
 - 관련 PR: 이 bootstrap Draft PR에서 확정 예정
 
 ## 배경과 문제
@@ -31,7 +31,7 @@ DohaMusic 제품 서비스와 Workspace·Job Orchestrator만 DohaAudio를 호출
 
 ## 영향과 Migration
 
-현재 Runtime과 HTTP API는 없습니다. 구현 시 contract version을 먼저 고정하고 client·provider contract test를 추가합니다. Big-bang 통합 대신 capability별로 검증합니다.
+학습 전 Runtime Foundation과 HTTP API는 [ADR-005](ADR-005-pre-training-runtime-foundation.md)에 따라 Fake Provider 범위에서 구현했습니다. 실제 모델 Runtime과 DohaMusic Provider Client 통합은 아직 없으며 capability별 단계 검증을 유지합니다.
 
 ## 재검토 조건
 
