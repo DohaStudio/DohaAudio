@@ -1,7 +1,7 @@
 # 평가 전략
 
-> 문서 상태: [계획]
-> Evaluation pipeline: [미구현]
+> 문서 상태: Evaluation metadata 계약 [구현]
+> Evaluation pipeline·metric 실행: [미구현]
 
 Evaluation은 capability별 정량 지표, 사람 평가, 라이선스·운영 Gate를 분리합니다.
 
@@ -15,3 +15,7 @@ Evaluation은 capability별 정량 지표, 사람 평가, 라이선스·운영 G
 - Runtime 지연 시간, 최대 VRAM, 오류·취소·재시도
 
 평가 Dataset은 Training Dataset과 누수를 방지하고 Manifest와 Split ID로 고정합니다. 측정하지 않은 수치와 비교 결과는 작성하지 않습니다. 결과는 `DohaArtifacts/audio/evaluations`에 두고 `evaluation_result_id`로 Model Manifest에 연결합니다.
+
+`EvaluationRequest`와 `EvaluationResultMetadata`는 future Evaluation의 `training_run_id`, `model_manifest_id`, `dataset_manifest_id`, evaluation split과 metrics Artifact 연결만 준비합니다. 실제 metric 값, Evaluation Artifact와 완료 상태는 생성하지 않습니다.
+
+예상 lineage는 `DatasetVersion → TrainingRun → future Checkpoint Artifact → future EvaluationResult → future ModelManifest`입니다. 아직 존재하지 않는 Checkpoint나 Evaluation ID를 완료된 결과처럼 발급하지 않습니다.

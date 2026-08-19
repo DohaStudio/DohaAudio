@@ -1,7 +1,7 @@
 # Provider 아키텍처
 
 > 문서 상태: [계획]
-> Runtime Foundation·Provider API 상태: [구현]
+> Runtime·Pre-Training Readiness Foundation·Provider API 상태: [구현]
 > 공통 명세: `0.1.0` / `draft-baseline`
 
 ## 호출 경계
@@ -36,10 +36,20 @@ DohaAudio는 DohaVocal과 DohaLM을 직접 호출하지 않습니다. 여러 Pro
 ```text
 FastAPI Provider API
 → JobApplicationService
+→ JobRepository (in-memory 또는 SQLite) / ExecutionWorker
 → AudioProvider capability interface
 → FakeAudioProvider 또는 향후 Real Provider Adapter
-→ In-memory Job / Artifact / Model Manifest registry
+→ Artifact Catalog / ArtifactResolver / Model Manifest registry
+
+DatasetManifestRegistry
+→ integrity·rights·eligibility validation
+→ TrainingReadinessService
+→ immutable TrainingRun preview / read-only dry-run
 ```
+
+SQLite Job repository는 Job aggregate 단위 method가 transaction owner입니다. create와 idempotency index, retry lineage, lifecycle payload를 한 transaction에서 갱신하여 부분 Job·부분 idempotency row를 만들지 않습니다. Worker는 짧은 atomic claim transaction 뒤 Provider를 호출하며 DB transaction을 실행 동안 유지하지 않습니다.
+
+동시 worker는 하나의 `claim_token`만 획득합니다. `running` lease가 만료되면 같은 Job을 자동 재실행하지 않고 `WORKER_LEASE_EXPIRED` structured error의 retryable `failed`로 복구합니다. 명시적 Retry만 새 Job을 만듭니다.
 
 ## 출력 유형
 

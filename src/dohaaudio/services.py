@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import re
 from copy import deepcopy
 from typing import Any
 from uuid import uuid4
@@ -30,39 +29,10 @@ from dohaaudio.errors import ConflictError, ContractError
 from dohaaudio.providers import CapabilityRegistry, ProviderRegistry
 from dohaaudio.repositories import (
     InMemoryArtifactCatalog,
-    InMemoryJobRepository,
     InMemoryManifestRegistry,
+    JobRepository,
 )
-
-WINDOWS_ABSOLUTE_PATH = re.compile(r"^[A-Za-z]:[\\/]")
-SENSITIVE_SETTING_KEYS = frozenset(
-    {"api_key", "apikey", "authorization", "credential", "password", "secret", "token"}
-)
-SENSITIVE_SETTING_SUFFIXES = ("_api_key", "_credential", "_password", "_secret", "_token")
-
-
-def _is_sensitive_setting_key(key: str) -> bool:
-    normalized = re.sub(r"[^a-z0-9]+", "_", key.casefold()).strip("_")
-    return normalized in SENSITIVE_SETTING_KEYS or normalized.endswith(SENSITIVE_SETTING_SUFFIXES)
-
-
-def _assert_safe_value(value: Any, *, key: str | None = None) -> None:
-    if key is not None and _is_sensitive_setting_key(key):
-        raise ContractError("UNSAFE_REQUEST_METADATA", "비밀정보 필드는 요청할 수 없습니다.")
-    if isinstance(value, dict):
-        for child_key, child_value in value.items():
-            _assert_safe_value(child_value, key=str(child_key))
-    elif isinstance(value, (list, tuple)):
-        for child in value:
-            _assert_safe_value(child)
-    elif isinstance(value, str) and (
-        WINDOWS_ABSOLUTE_PATH.match(value)
-        or value.startswith(("/", "~/", "~\\", "\\\\"))
-        or value.casefold().startswith("file:")
-    ):
-        raise ContractError(
-            "ABSOLUTE_PATH_FORBIDDEN", "절대 경로는 Provider 계약에 사용할 수 없습니다."
-        )
+from dohaaudio.security import assert_safe_metadata
 
 
 def _canonical_fingerprint(request: CreateJobRequest, *, retry_of: str | None = None) -> str:
@@ -77,7 +47,7 @@ def _canonical_fingerprint(request: CreateJobRequest, *, retry_of: str | None = 
 class JobApplicationService:
     def __init__(
         self,
-        jobs: InMemoryJobRepository,
+        jobs: JobRepository,
         artifacts: InMemoryArtifactCatalog,
         manifests: InMemoryManifestRegistry,
         providers: ProviderRegistry,
@@ -125,9 +95,10 @@ class JobApplicationService:
         provider = self.providers.get(record.provider_id)
         try:
             execution = provider.execute(record)
-            artifact_ids = []
-            for artifact in execution.artifacts:
-                artifact_ids.append(self.artifacts.register(artifact).artifact_id)
+            artifact_ids = [
+                artifact.artifact_id
+                for artifact in self.artifacts.register_many(execution.artifacts)
+            ]
             updated = self._transition(
                 record,
                 JobStatus.SUCCEEDED,
@@ -147,6 +118,59 @@ class JobApplicationService:
                 retryable=False,
             )
         self.jobs.replace(updated)
+        return JobResponse.from_record(updated)
+
+    def execute_claimed(self, job_id: str, claim_token: str) -> JobResponse:
+        """Execute exactly one active worker claim and observe concurrent cancellation."""
+        record = self.jobs.get(job_id)
+        if record.status != JobStatus.RUNNING or record.claim_token != claim_token:
+            raise ConflictError("WORKER_CLAIM_LOST", "Worker claim이 더 이상 유효하지 않습니다.")
+        provider = self.providers.get(record.provider_id)
+        try:
+            execution = provider.execute(record)
+            current = self.jobs.get(job_id)
+            if current.status == JobStatus.CANCELLED:
+                return JobResponse.from_record(current)
+            if current.claim_token != claim_token:
+                raise ConflictError(
+                    "WORKER_CLAIM_LOST", "Worker claim이 더 이상 유효하지 않습니다."
+                )
+            artifacts = self.artifacts.register_many(execution.artifacts)
+            updated = self._transition(
+                current,
+                JobStatus.SUCCEEDED,
+                progress_percent=100,
+                stage="completed",
+                output_artifact_ids=tuple(item.artifact_id for item in artifacts),
+                result_metadata=deepcopy(execution.result_metadata),
+                completed_at=utc_now(),
+                claim_token=None,
+                claimed_by=None,
+                lease_expires_at=None,
+                heartbeat_at=None,
+            )
+        except ConflictError:
+            raise
+        except ContractError as exc:
+            current = self.jobs.get(job_id)
+            if current.status == JobStatus.CANCELLED:
+                return JobResponse.from_record(current)
+            updated = self._clear_claim(
+                self._failed(current, exc.error_code, exc.message, retryable=True)
+            )
+        except Exception:
+            current = self.jobs.get(job_id)
+            if current.status == JobStatus.CANCELLED:
+                return JobResponse.from_record(current)
+            updated = self._clear_claim(
+                self._failed(
+                    current,
+                    "PROVIDER_EXECUTION_FAILED",
+                    "Provider 실행 중 안전하게 공개할 수 없는 오류가 발생했습니다.",
+                    retryable=False,
+                )
+            )
+        self.jobs.replace_claimed(updated, claim_token)
         return JobResponse.from_record(updated)
 
     def update_progress(self, job_id: str, progress_percent: int, stage: str) -> JobResponse:
@@ -174,6 +198,10 @@ class JobApplicationService:
             JobStatus.CANCELLED,
             stage="cancelled",
             completed_at=utc_now(),
+            claim_token=None,
+            claimed_by=None,
+            lease_expires_at=None,
+            heartbeat_at=None,
         )
         self.jobs.replace(updated)
         return JobResponse.from_record(updated)
@@ -262,7 +290,7 @@ class JobApplicationService:
         )
 
     def _validate_request_metadata(self, request: CreateJobRequest) -> None:
-        _assert_safe_value(request.model_dump(mode="python"))
+        assert_safe_metadata(request.model_dump(mode="python"))
         if request.provider_id != PROVIDER_ID:
             raise ContractError("PROVIDER_MISMATCH", "요청 Provider가 DohaAudio가 아닙니다.")
         if request.api_contract_version != API_CONTRACT_VERSION:
@@ -364,4 +392,16 @@ class JobApplicationService:
                 stage=record.stage,
             ),
             completed_at=utc_now(),
+        )
+
+    @staticmethod
+    def _clear_claim(record: JobRecord) -> JobRecord:
+        return record.model_copy(
+            update={
+                "claim_token": None,
+                "claimed_by": None,
+                "lease_expires_at": None,
+                "heartbeat_at": None,
+            },
+            deep=True,
         )

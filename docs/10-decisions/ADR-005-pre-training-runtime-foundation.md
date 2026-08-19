@@ -45,7 +45,7 @@ Fake Provider는 Music Generation, Stem Separation과 Audio Analysis의 determin
 
 ## 영향과 후속 작업
 
-실제 Runtime Adapter는 동일 `AudioProvider` interface를 구현해야 합니다. 영속 Job repository, worker, 인증, Artifact resolver, 실제 Model Manifest 승인, GPU 실행과 DohaMusic 통합은 별도 PR에서 결정하고 검증합니다.
+실제 Runtime Adapter는 동일 `AudioProvider` interface를 구현해야 합니다. 영속 Job repository, worker, Artifact resolver와 Training readiness boundary는 후속 [ADR-006](ADR-006-pre-training-readiness.md)에서 구현했습니다. 인증, 실제 Model Manifest 승인, GPU 실행과 DohaMusic 통합은 여전히 별도 작업입니다.
 
 ## 재검토 조건
 

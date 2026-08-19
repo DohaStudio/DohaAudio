@@ -202,6 +202,11 @@ class JobRecord(FrozenModel):
     created_at: datetime
     started_at: datetime | None = None
     completed_at: datetime | None = None
+    claim_token: str | None = None
+    claimed_by: str | None = None
+    lease_expires_at: datetime | None = None
+    heartbeat_at: datetime | None = None
+    recovery_count: int = Field(default=0, ge=0)
 
     @model_validator(mode="after")
     def validate_terminal_record(self) -> JobRecord:
@@ -243,6 +248,11 @@ class JobResponse(FrozenModel):
                     "input_artifact_ids",
                     "requested_by",
                     "result_metadata",
+                    "claim_token",
+                    "claimed_by",
+                    "lease_expires_at",
+                    "heartbeat_at",
+                    "recovery_count",
                 }
             )
         )
