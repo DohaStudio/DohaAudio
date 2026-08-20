@@ -166,8 +166,13 @@ def test_authority_registry_is_versioned_idempotent_immutable_and_private(tmp_pa
         )
     assert conflict.value.error_code == "REVIEWER_AUTHORITY_IMMUTABLE_CONFLICT"
 
+    for reviewer_id in ("private@reviewer", "https://example.test/reviewer", "*"):
+        with pytest.raises(ValidationError):
+            _authority(evidence, policy, reviewer_id=reviewer_id)
+
+    wildcard_scope = _authority(evidence, policy).model_copy(update={"evidence_policy_ids": ("*",)})
     with pytest.raises(ValidationError):
-        _authority(evidence, policy, reviewer_id="private@reviewer")
+        ReviewerAuthority(**wildcard_scope.model_dump())
 
 
 @pytest.mark.parametrize(
@@ -425,6 +430,16 @@ def test_later_authority_revocation_blocks_downstream_consumption(tmp_path: Path
         consumed_at=NOW,
     )
     assert approved.status == SemanticReviewStatus.APPROVED
+
+    with pytest.raises(ContractError) as expired:
+        workflow.consume_decision(
+            request.request_id,
+            current_evidence=evidence,
+            current_evidence_policy=policy,
+            current_role_policy=role_policy,
+            consumed_at=NOW + timedelta(days=2),
+        )
+    assert expired.value.error_code == "REVIEWER_AUTHORITY_EXPIRED"
 
     revocation = authorities.revoke(
         authority.authority_id,

@@ -32,6 +32,7 @@ from dohaaudio.semantic_role_evidence import (
 )
 
 SAFE_REASON = re.compile(r"^SEMANTIC_REVIEW_[A-Z0-9_]+$")
+OPAQUE_REVIEWER_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._/-]*$")
 
 
 class ReviewerAction(StrEnum):
@@ -69,11 +70,25 @@ class ReviewerAuthority(FrozenModel):
     created_at: datetime
     audit_reason_code: str
 
+    @field_validator("authority_id", "authority_version", "candidate_id")
+    @classmethod
+    def require_exact_identifier(cls, value: str) -> str:
+        _require_no_wildcard(value, "reviewer authority identifiers")
+        return value
+
+    @field_validator("evidence_policy_ids", "role_policy_ids")
+    @classmethod
+    def require_exact_policy_identifiers(cls, values: tuple[str, ...]) -> tuple[str, ...]:
+        for value in values:
+            _require_no_wildcard(value, "reviewer authority scope identifiers")
+        return values
+
     @field_validator("reviewer_id")
     @classmethod
     def require_opaque_reviewer_id(cls, value: str) -> str:
-        if "@" in value or "\\" in value or any(character.isspace() for character in value):
+        if not OPAQUE_REVIEWER_ID.fullmatch(value):
             raise ValueError("reviewer identity must be an opaque logical identifier")
+        _require_no_wildcard(value, "reviewer identity")
         return value
 
     @model_validator(mode="after")
@@ -959,6 +974,11 @@ def _require_reason(value: str) -> None:
 def _require_nonempty_unique(values: tuple[Any, ...], label: str) -> None:
     if not values or len(set(values)) != len(values):
         raise ValueError(f"{label} must be non-empty and unique")
+
+
+def _require_no_wildcard(value: str, label: str) -> None:
+    if "*" in value or "?" in value:
+        raise ValueError(f"{label} must not contain wildcard characters")
 
 
 def _require_aware(*values: datetime | None) -> None:
