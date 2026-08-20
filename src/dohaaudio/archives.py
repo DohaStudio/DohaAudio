@@ -636,7 +636,10 @@ def archive_inspections_to_inventory(
             "Duplicate archive identities cannot become Dataset membership.",
         )
     if any(
-        not item.inspection_complete or item.inspection_status != ArchiveInspectionStatus.COMPLETE
+        not item.inspection_complete
+        or not item.membership_known
+        or not item.path_safety_pass
+        or item.inspection_status != ArchiveInspectionStatus.COMPLETE
         for item in ordered
     ):
         raise ContractError(
@@ -708,11 +711,14 @@ def inspect_archive_set_summary(
     ordered = tuple(sorted(sources, key=lambda item: item.archive_logical_id))
     reasons: list[str] = []
     identities = [source.archive_logical_id for source in ordered]
-    if any(source.candidate_id != candidate_id for source in ordered):
+    candidate_scope_matches = all(source.candidate_id == candidate_id for source in ordered)
+    if not candidate_scope_matches:
         reasons.append("ARCHIVE_SET_CANDIDATE_MISMATCH")
-    if len(identities) != len(set(identities)):
+    identities_unique = len(identities) == len(set(identities))
+    if not identities_unique:
         reasons.append("ARCHIVE_SET_DUPLICATE_IDENTITY")
-    if expected_archive_ids is not None and set(identities) != expected_archive_ids:
+    expected_scope_matches = expected_archive_ids is None or set(identities) == expected_archive_ids
+    if not expected_scope_matches:
         reasons.append("ARCHIVE_SET_EXPECTED_IDENTITY_MISMATCH")
 
     counters = {
@@ -729,9 +735,12 @@ def inspect_archive_set_summary(
     checksums: list[str] = []
     extensions: Counter[str] = Counter()
     media_types: Counter[str] = Counter()
-    all_complete = bool(ordered)
-    all_membership_known = bool(ordered)
-    all_paths_safe = bool(ordered)
+    archive_set_valid = (
+        bool(ordered) and candidate_scope_matches and identities_unique and expected_scope_matches
+    )
+    all_complete = archive_set_valid
+    all_membership_known = archive_set_valid
+    all_paths_safe = archive_set_valid
     for source in ordered:
         result = inspector.inspect(source, mode=mode)
         counters["bytes"] += result.archive_size_bytes

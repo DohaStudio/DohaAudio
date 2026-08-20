@@ -309,6 +309,25 @@ def test_archive_set_detects_duplicate_identity_and_checksum(tmp_path: Path) -> 
     assert "ARCHIVE_SET_DUPLICATE_CHECKSUM" in duplicate_checksum.blocking_reasons
 
 
+def test_partial_archive_set_cannot_report_complete_membership(tmp_path: Path) -> None:
+    archive_path = tmp_path / "present.zip"
+    write_zip(archive_path, [("audio.wav", b"audio")])
+    present = source(archive_path, archive_id="candidate/archive/present")
+
+    summary = inspect_archive_set_summary(
+        ZipArchiveInspector(policy()),
+        [present],
+        candidate_id="archive-candidate",
+        expected_archive_ids=frozenset({"candidate/archive/present", "candidate/archive/missing"}),
+    )
+
+    assert summary.inspected_archive_count == 1
+    assert summary.archive_inspection_complete is False
+    assert summary.archive_membership_known is False
+    assert summary.archive_path_safety_pass is False
+    assert "ARCHIVE_SET_EXPECTED_IDENTITY_MISMATCH" in summary.blocking_reasons
+
+
 def _proposal(item_count: int) -> DatasetEnrollmentProposal:
     return DatasetEnrollmentProposal(
         candidate_id="archive-candidate",
@@ -441,7 +460,18 @@ def test_partial_or_cross_candidate_inspection_cannot_map_to_inventory(
 
     valid = tmp_path / "valid.zip"
     write_zip(valid, [("audio.wav", b"audio")])
-    inspection = inspect(valid).model_copy(update={"candidate_id": "different-candidate"})
+    valid_inspection = inspect(valid)
+    unsafe = valid_inspection.model_copy(update={"path_safety_pass": False})
+    with pytest.raises(ContractError) as unsafe_mapping:
+        archive_inspections_to_inventory(
+            (unsafe,),
+            authority_id="archive-authority-v1",
+            candidate_id="archive-candidate",
+            source_alias="archive/candidate",
+        )
+    assert unsafe_mapping.value.error_code == "ARCHIVE_INSPECTION_INCOMPLETE"
+
+    inspection = valid_inspection.model_copy(update={"candidate_id": "different-candidate"})
     with pytest.raises(ContractError) as mismatch:
         archive_inspections_to_inventory(
             (inspection,),
