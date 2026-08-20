@@ -122,7 +122,9 @@ class FakeAuthenticationProvider:
         self._issuer_id = _require_opaque(issuer_id, "issuer identity")
         self._audience_id = _require_opaque(audience_id, "audience identity")
         self._principals: dict[str, AuthenticatedPrincipal] = {}
-        self._issued: dict[str, VerifiedAuthenticationContext] = {}
+        self._issued: dict[
+            str, tuple[AuthenticatedPrincipal, datetime, VerifiedAuthenticationContext]
+        ] = {}
         self._witness = object()
 
     @property
@@ -178,7 +180,11 @@ class FakeAuthenticationProvider:
             verified_at=verified_at,
             _provider_witness=self._witness,
         )
-        self._issued[context.verification_id] = context
+        self._issued[context.verification_id] = (
+            principal.model_copy(deep=True),
+            verified_at,
+            context,
+        )
         return context
 
     def revalidate(
@@ -190,14 +196,25 @@ class FakeAuthenticationProvider:
         at: datetime,
     ) -> AuthenticatedPrincipal:
         _require_aware(at)
+        issued = (
+            self._issued.get(context.verification_id)
+            if isinstance(context, VerifiedAuthenticationContext)
+            else None
+        )
         if (
             not isinstance(context, VerifiedAuthenticationContext)
             or context._provider_witness is not self._witness
-            or self._issued.get(context.verification_id) is not context
+            or issued is None
+            or issued[2] is not context
         ):
             raise ContractError(
                 "AUTHENTICATION_CONTEXT_UNTRUSTED",
                 "Authentication requires a current provider-issued verification context.",
+            )
+        if context.principal != issued[0] or context.verified_at != issued[1]:
+            raise ContractError(
+                "AUTHENTICATION_CONTEXT_TAMPERED",
+                "Provider-issued authentication context cannot be modified.",
             )
         if context.verified_at > at:
             raise ContractError(
@@ -289,6 +306,8 @@ class ReviewerIdentityMapping(FrozenModel):
             raise ValueError("revoked identity mapping requires a revocation time")
         if self.revoked_at is not None and self.revoked_at < self.effective_at:
             raise ValueError("identity mapping cannot be revoked before it becomes effective")
+        if self.subject_reference == self.reviewer_id:
+            raise ValueError("opaque reviewer identity must differ from provider subject reference")
         _require_reason(self.audit_reason_code)
         return self
 

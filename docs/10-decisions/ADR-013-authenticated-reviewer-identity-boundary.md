@@ -22,6 +22,7 @@ ADR-012는 opaque reviewer ID와 versioned authority를 제공하지만 실제 a
 10. Semantic decision에는 provider subject, session 또는 authentication artifact를 추가하지 않고 기존 opaque reviewer/evidence/policy/authority lineage를 유지합니다.
 11. Foundation은 deterministic fake provider만 제공합니다. 실제 OAuth/OIDC, secret, real mapping, real authority와 real approval은 구현하지 않습니다.
 12. Authentication success는 semantic approval, Rights approval, Integrity PASS 또는 Training approval을 만들지 않습니다.
+13. Authentication context는 decision 제출 시점에만 검증하고 장기 decision record에는 보존하지 않습니다. 이후 context expiry는 과거 decision을 소급 변경하지 않으며 downstream 소비는 현재 mapping과 ReviewerAuthority를 재검증합니다.
 
 ## 결과
 

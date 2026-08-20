@@ -32,6 +32,8 @@ Authentication resolver가 설정된 `HumanSemanticReviewWorkflow`는 caller가 
 
 Semantic decision은 기존 request, evidence, policy, authority와 opaque reviewer ID lineage만 유지합니다. Provider subject, session, verification context와 authentication metadata는 장기 semantic audit record에 복사하지 않습니다.
 
+Authentication context는 decision 제출 시 검증하며 semantic decision에 보존하지 않습니다. 유효하게 생성된 decision은 context가 나중에 만료됐다는 이유만으로 소급 무효화하지 않고, downstream 소비 시 현재 private mapping과 ReviewerAuthority의 expiry·revocation을 다시 검증합니다. Expired context를 새 decision에 재사용하는 것은 차단됩니다.
+
 ## 현재 운영 상태
 
 - 구현 provider: `FakeAuthenticationProvider` test fixture만 존재

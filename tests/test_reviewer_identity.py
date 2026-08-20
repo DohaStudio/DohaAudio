@@ -322,6 +322,16 @@ def test_unknown_proof_and_forged_or_modified_context_are_blocked() -> None:
             resolver.resolve(invalid, at=NOW)  # type: ignore[arg-type]
         assert exc_info.value.error_code == "AUTHENTICATION_CONTEXT_UNTRUSTED"
 
+    in_place = provider.verify(_credential(), verified_at=NOW + timedelta(seconds=1))
+    object.__setattr__(
+        in_place,
+        "principal",
+        in_place.principal.model_copy(update={"subject_reference": "subject-ref/attacker"}),
+    )
+    with pytest.raises(ContractError) as in_place_tampering:
+        resolver.resolve(in_place, at=NOW + timedelta(seconds=1))
+    assert in_place_tampering.value.error_code == "AUTHENTICATION_CONTEXT_TAMPERED"
+
 
 def test_mapping_registry_is_private_versioned_idempotent_and_immutable() -> None:
     registry = ReviewerIdentityMappingRegistry()
@@ -333,6 +343,8 @@ def test_mapping_registry_is_private_versioned_idempotent_and_immutable() -> Non
     assert conflict.value.error_code == "REVIEWER_IDENTITY_MAPPING_IMMUTABLE_CONFLICT"
     assert "candidate_id" not in ReviewerIdentityMapping.model_fields
     assert "email" not in ReviewerIdentityMapping.model_fields
+    with pytest.raises(ValidationError):
+        _mapping(reviewer_id=SUBJECT_REFERENCE)
 
 
 @pytest.mark.parametrize(
@@ -535,10 +547,19 @@ def test_mapping_and_authority_are_revalidated_when_decision_is_consumed(tmp_pat
     )
     assert approved.status == SemanticReviewStatus.APPROVED
 
+    after_authentication_expiry = workflow.consume_decision(
+        request.request_id,
+        current_evidence=evidence,
+        current_evidence_policy=policy,
+        current_role_policy=role_policy,
+        consumed_at=NOW + timedelta(hours=2),
+    )
+    assert after_authentication_expiry.status == SemanticReviewStatus.APPROVED
+
     mappings.revoke(
         MAPPING_ID,
         "1.0.0",
-        revoked_at=NOW + timedelta(minutes=1),
+        revoked_at=NOW + timedelta(hours=3),
         reason_code="REVIEWER_IDENTITY_MAPPING_REVOKED",
     )
     with pytest.raises(ContractError) as revoked_mapping:
@@ -547,9 +568,29 @@ def test_mapping_and_authority_are_revalidated_when_decision_is_consumed(tmp_pat
             current_evidence=evidence,
             current_evidence_policy=policy,
             current_role_policy=role_policy,
-            consumed_at=NOW + timedelta(minutes=2),
+            consumed_at=NOW + timedelta(hours=4),
         )
     assert revoked_mapping.value.error_code == "REVIEWER_IDENTITY_REVOKED"
+
+    expired_mapping = _workflow_fixture(tmp_path / "expired-mapping", register_mapping=False)
+    expired_mapping[5].register(_mapping(expires_at=NOW + timedelta(hours=1)))
+    _submit_authenticated(
+        expired_mapping[8],
+        expired_mapping[9],
+        expired_mapping[0].request_id,
+        expired_mapping[1],
+        expired_mapping[2],
+        expired_mapping[3],
+    )
+    with pytest.raises(ContractError) as mapping_expired:
+        expired_mapping[8].consume_decision(
+            expired_mapping[0].request_id,
+            current_evidence=expired_mapping[2],
+            current_evidence_policy=expired_mapping[3],
+            current_role_policy=expired_mapping[1],
+            consumed_at=NOW + timedelta(hours=2),
+        )
+    assert mapping_expired.value.error_code == "REVIEWER_IDENTITY_EXPIRED"
 
     other = _workflow_fixture(tmp_path / "authority")
     _submit_authenticated(other[8], other[9], other[0].request_id, other[1], other[2], other[3])
