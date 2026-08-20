@@ -72,3 +72,7 @@ Provider Registry와 Capability Registry는 Provider 선택과 지원 capability
 - [ADR-001 Repository Boundary](../10-decisions/ADR-001-repository-boundary.md)
 - [ADR-002 Provider Contract](../10-decisions/ADR-002-provider-contract.md)
 - [ADR-004 Artifact Lifecycle](../10-decisions/ADR-004-artifact-lifecycle.md)
+
+## Human semantic review governance
+
+Bounded evidence 이후의 human review는 `ReviewerAuthorityRegistry`와 `HumanSemanticReviewWorkflow` domain service가 담당합니다. Request·decision·revocation은 불변 record이고 최종 role-policy 소비 시 현재 evidence·policy·authority를 다시 확인합니다. 이 service는 authentication 또는 HTTP endpoint를 제공하지 않으므로 실제 reviewer identity mapping과 production approval은 비활성화되어 있습니다.

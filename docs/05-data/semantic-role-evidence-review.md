@@ -52,6 +52,8 @@ WAV population은 Music 108,000, Traditional 9,961이지만 sampled header와 de
 
 `SemanticRoleEvidencePolicy`는 required observation kind, minimum sample count, completeness와 선택적 schema consistency ceiling을 caller-configurable하게 표현합니다. `allow_automatic_approval=true`는 계약에서 거부합니다. 실제 두 candidate policy에는 승인된 reviewer authority가 없습니다.
 
+Versioned authority, immutable request·decision lineage와 revocation 후 재검증은 [Reviewer Authority와 Human Semantic Review Workflow](human-semantic-review-workflow.md)에서 정의합니다. PR #11의 lower-level evidence/decision 계약은 유지되지만 governance-aware role-policy 소비는 새 workflow service를 사용합니다.
+
 따라서 Music과 Traditional의 audio, MIDI, JSON decision은 모두 `review_required`이고 automatic approval은 0입니다. Synthetic test에서만 등록된 test reviewer authority와 exact evidence를 사용해 approved decision을 만들고 기존 `CandidateRoleDispositionPolicy`가 이를 소비할 수 있음을 검증합니다.
 
 | candidate | structural ready | semantic decisions | inventory ready |

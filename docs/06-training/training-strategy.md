@@ -39,4 +39,6 @@ Dry-run은 canonical config fingerprint와 deterministic planned `TrainingRun` i
 
 Semantic role evidence와 review decision은 Training Admission 이전의 local 검토 계약입니다. Semantic role이 human-approved 상태가 되더라도 Rights·Integrity·Split·Model·Config·Environment·Execution Gate를 변경하지 않습니다. 현재 실제 candidate는 reviewer authority가 없으므로 모든 role이 `review_required`입니다.
 
+Human review workflow의 authority·request·decision lineage도 semantic disposition에만 영향을 줍니다. Reviewer authority 등록이나 semantic approval은 Rights evidence, full checksum, DatasetVersion, split 또는 explicit Training approval을 대체하지 않습니다.
+
 Rights Enrollment는 Training 이전의 별도 단계입니다. `DatasetEnrollmentService`가 Manifest·DatasetVersion·Split을 등록하더라도 model, TrainingConfig, environment, preflight와 explicit execution approval Gate를 자동 승인하지 않습니다. 현재 실제 후보에서 발급된 Manifest·Version·Split은 0개입니다.
