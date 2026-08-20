@@ -1,11 +1,11 @@
 # Reviewer Authority Registry와 Human Semantic Review Workflow
 
 > 문서 상태: governance Foundation [구현]
-> 실제 reviewer authentication·authority 등록·semantic approval: [미구현]
+> 실제 authentication provider·identity mapping·authority 등록·semantic approval: [미구현]
 
 ## 경계
 
-이 Foundation은 `SemanticRoleEvidence`를 사람이 검토할 때 필요한 domain authorization과 감사 계보를 정의합니다. 실제 계정 인증, reviewer 지정, Music·Traditional 승인 또는 거절은 수행하지 않습니다. Repository에 등록되는 reviewer identity는 `reviewer-test/...` 같은 opaque logical ID이며 이메일·계정 profile·private note를 저장하지 않습니다.
+이 Foundation은 `SemanticRoleEvidence`를 사람이 검토할 때 필요한 domain authorization과 감사 계보를 정의합니다. 별도 authentication Foundation이 존재하지만 실제 provider login, reviewer 지정, Music·Traditional 승인 또는 거절은 수행하지 않습니다. Repository에 등록되는 reviewer identity는 `reviewer-test/...` 같은 opaque logical ID이며 이메일·계정 profile·private note를 저장하지 않습니다.
 
 ```text
 SemanticRoleEvidence
@@ -16,7 +16,7 @@ SemanticRoleEvidence
   → CandidateRoleDispositionPolicy
 ```
 
-Reviewer authorization은 identity authentication이 아닙니다. 현재 실제 인증 adapter가 없으므로 production human approval workflow는 운영상 비활성화되어 있습니다.
+Reviewer authorization은 identity authentication이 아닙니다. 인증 경계는 [Authenticated Reviewer Identity Boundary](../09-security/authenticated-reviewer-identity.md)에 별도로 구현되며, 실제 provider·mapping·authority가 없으므로 production human approval workflow는 운영상 계속 비활성화되어 있습니다.
 
 ## Reviewer authority
 
@@ -39,6 +39,8 @@ Decision 제출 시 request pending 상태, current evidence, 모든 policy iden
 ## 소비와 실제 상태
 
 `HumanSemanticReviewWorkflow.apply_to_role_policy()`는 모든 role의 request·decision·현재 evidence·policy와 authority 상태를 다시 검증한 뒤 기존 PR #11 role-policy 적용 함수에 전달합니다. Authority가 나중에 revoke되거나 evidence/policy가 바뀌면 과거 decision의 현재 소비는 차단됩니다.
+
+Authentication resolver가 주입된 workflow에서는 raw `submit_decision()`을 사용할 수 없습니다. `submit_authenticated_decision()`이 provider-issued context를 재검증하고 private mapping에서 opaque reviewer ID를 얻은 뒤 기존 authority/evidence 검증 경로를 그대로 호출합니다. Mapping expiry 또는 revocation도 downstream 소비를 차단하며 과거 request·decision audit record는 삭제하지 않습니다.
 
 테스트에는 `reviewer-authority/reviewer-test/...` namespace의 synthetic authority만 존재합니다. 실제 Music·Traditional authority와 human approval은 0개입니다.
 

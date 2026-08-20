@@ -45,6 +45,13 @@ DatasetManifestRegistry
 → integrity·rights·eligibility validation
 → TrainingReadinessService
 → immutable TrainingRun preview / read-only dry-run
+
+AuthenticationProvider
+→ provider-issued VerifiedAuthenticationContext
+→ private ReviewerIdentityMappingRegistry
+→ opaque reviewer ID
+→ existing ReviewerAuthorityRegistry
+→ HumanSemanticReviewWorkflow
 ```
 
 SQLite Job repository는 Job aggregate 단위 method가 transaction owner입니다. create와 idempotency index, retry lineage, lifecycle payload를 한 transaction에서 갱신하여 부분 Job·부분 idempotency row를 만들지 않습니다. Worker는 짧은 atomic claim transaction 뒤 Provider를 호출하며 DB transaction을 실행 동안 유지하지 않습니다.
@@ -75,4 +82,6 @@ Provider Registry와 Capability Registry는 Provider 선택과 지원 capability
 
 ## Human semantic review governance
 
-Bounded evidence 이후의 human review는 `ReviewerAuthorityRegistry`와 `HumanSemanticReviewWorkflow` domain service가 담당합니다. Request·decision·revocation은 불변 record이고 최종 role-policy 소비 시 현재 evidence·policy·authority를 다시 확인합니다. 이 service는 authentication 또는 HTTP endpoint를 제공하지 않으므로 실제 reviewer identity mapping과 production approval은 비활성화되어 있습니다.
+Bounded evidence 이후의 human review는 `ReviewerAuthorityRegistry`와 `HumanSemanticReviewWorkflow` domain service가 담당합니다. Request·decision·revocation은 불변 record이고 최종 role-policy 소비 시 현재 evidence·policy·authority를 다시 확인합니다.
+
+`AuthenticationProvider`는 특정 OAuth SDK와 분리된 verification protocol입니다. Provider-issued context만 `AuthenticatedReviewerResolver`가 수용하며 private `ReviewerIdentityMappingRegistry`에서 provider principal을 opaque reviewer ID로 해석합니다. 인증이 설정된 workflow는 unauthenticated raw submission을 차단하고 authentication, mapping, 기존 authority scope를 차례로 검증합니다. Mapping revocation·expiry도 decision 소비 시 다시 확인하지만 provider subject·session은 semantic decision에 저장하지 않습니다. 현재 adapter는 deterministic fake뿐이며 실제 provider, real mapping과 real authority가 0이므로 production approval은 계속 비활성화되어 있습니다.

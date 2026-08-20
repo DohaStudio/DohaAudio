@@ -28,6 +28,11 @@
 - effective·expiry·revocation을 decision 생성과 downstream 소비에서 재검증하는 fail-closed 경계
 - immutable semantic review request·resolution·supersession과 one-request/one-decision audit lineage
 - authentication과 domain authorization을 분리한 synthetic-only human semantic review workflow
+- provider-independent `AuthenticationProvider`와 immutable sanitized `AuthenticatedPrincipal`
+- deserialized principal을 신뢰하지 않는 provider-issued verification context와 freshness 검증
+- private versioned principal→opaque reviewer identity mapping, revocation·rebind·collision 차단 registry
+- authentication·mapping·기존 ReviewerAuthority를 순서대로 재검증하는 authenticated review path
+- network·secret 없이 실패 경계를 검증하는 test-only `FakeAuthenticationProvider`
 
 - SQLite 기반 영속 Job repository와 process restart 이후 idempotency·retry lineage 보존
 - atomic worker claim·lease, cancellation 관찰, structured failure와 stale-running fail-safe recovery
@@ -56,6 +61,8 @@
 
 ### 미구현
 
+- 실제 OAuth/OIDC provider, private real identity mapping과 real ReviewerAuthority 등록
+- 실제 Music·Traditional human semantic approval/rejection
 - 권리 승인된 실제 Dataset Manifest·Split과 TrainingConfig
 - Music Generator, Stem Separation, Music Analysis
 - 실제 Dataset Migration·decode와 Training·Evaluation 실행
