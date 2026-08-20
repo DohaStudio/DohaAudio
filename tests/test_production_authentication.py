@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import cast
 
 import pytest
 from pydantic import ValidationError
@@ -19,6 +20,7 @@ from dohaaudio.reviewer_identity import (
     AuthenticationCredentialReference,
     ReviewerIdentityMappingRegistry,
     ReviewerIdentityMappingStore,
+    VerifiedAuthenticationContext,
 )
 
 NOW = datetime(2026, 8, 21, tzinfo=UTC)
@@ -54,7 +56,9 @@ def _config(**updates: object) -> ProductionAuthenticationProviderConfig:
 
 def test_repository_decision_can_remain_unselected_without_activation() -> None:
     result = AuthenticationProviderFactory().bootstrap(
-        CURRENT_PRODUCTION_AUTHENTICATION_SELECTION, None
+        CURRENT_PRODUCTION_AUTHENTICATION_SELECTION,
+        _config(),
+        private_identity_store_operational=True,
     )
 
     assert CURRENT_PRODUCTION_AUTHENTICATION_SELECTION.selected_provider_type is None
@@ -87,9 +91,15 @@ def test_selection_record_rejects_contradictory_states() -> None:
 
 
 def test_selected_provider_config_is_accepted_but_stub_is_not_operational() -> None:
-    result = AuthenticationProviderFactory().bootstrap(_selected(), _config())
+    factory = AuthenticationProviderFactory()
+    result = factory.bootstrap(_selected(), _config())
+    replay = factory.bootstrap(_selected(), _config())
 
     assert isinstance(result.provider, UnavailableProductionAuthenticationProvider)
+    assert isinstance(replay.provider, UnavailableProductionAuthenticationProvider)
+    assert replay.readiness == result.readiness
+    assert replay.provider.provider_id == result.provider.provider_id
+    assert replay.provider.provider_type == result.provider.provider_type
     assert result.readiness.provider_selected is True
     assert result.readiness.provider_configured is True
     assert result.readiness.provider_operational is False
@@ -100,6 +110,14 @@ def test_selected_provider_config_is_accepted_but_stub_is_not_operational() -> N
                 provider_id="production-auth/test", reference_id="ephemeral/test"
             ),
             verified_at=NOW,
+        )
+    assert error.value.error_code == "AUTH_PROVIDER_NOT_OPERATIONAL"
+    with pytest.raises(ContractError, match="not implemented") as error:
+        result.provider.revalidate(
+            cast(VerifiedAuthenticationContext, object()),
+            expected_issuer_id="issuer/test",
+            expected_audience_id="audience/dohaaudio/reviewer",
+            at=NOW,
         )
     assert error.value.error_code == "AUTH_PROVIDER_NOT_OPERATIONAL"
 
@@ -133,9 +151,10 @@ def test_unsupported_provider_and_selection_mismatch_are_blocked() -> None:
 
 
 def test_fake_provider_cannot_be_selected_or_configured_for_production() -> None:
+    factory = AuthenticationProviderFactory()
     fake_selection = _selected(ProductionAuthenticationProviderType.FAKE)
     with pytest.raises(ContractError) as error:
-        AuthenticationProviderFactory().bootstrap(fake_selection, None)
+        factory.bootstrap(fake_selection, None)
     assert error.value.error_code == "AUTH_PROVIDER_FAKE_FORBIDDEN"
 
     fake_config = _config(
@@ -144,12 +163,24 @@ def test_fake_provider_cannot_be_selected_or_configured_for_production() -> None
         network_access_required=False,
     )
     with pytest.raises(ContractError) as error:
-        AuthenticationProviderFactory().bootstrap(_selected(), fake_config)
+        factory.bootstrap(_selected(), fake_config)
     assert error.value.error_code == "AUTH_PROVIDER_FAKE_FORBIDDEN"
+    assert factory.bootstrap(_selected(), _config()).readiness.provider_operational is False
 
 
 def test_config_rejects_secret_fields_and_invalid_oidc_policy() -> None:
-    for secret_field in ("secret", "token", "private_key", "password", "client_secret"):
+    for secret_field in (
+        "secret",
+        "token",
+        "access_token",
+        "refresh_token",
+        "id_token",
+        "private_key",
+        "password",
+        "client_secret",
+        "session_secret",
+        "credential",
+    ):
         with pytest.raises(ValidationError):
             _config(**{secret_field: "synthetic-do-not-store"})
     with pytest.raises(ValidationError):
@@ -164,7 +195,15 @@ def test_config_rejects_secret_fields_and_invalid_oidc_policy() -> None:
 
 def test_public_config_serialization_contains_no_secret_material() -> None:
     rendered = _config().model_dump_json()
-    for forbidden in ("secret", "token", "private_key", "password", "credential"):
+    for forbidden in (
+        "secret",
+        "token",
+        "private_key",
+        "password",
+        "credential",
+        "subject_reference",
+        "reviewer_id",
+    ):
         assert forbidden not in rendered.lower()
 
 
