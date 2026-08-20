@@ -33,12 +33,21 @@ class JobRepository(Protocol):
     def replace(self, job: JobRecord) -> None: ...
     def replace_claimed(self, job: JobRecord, claim_token: str) -> None: ...
     def claim_next(self, worker_id: str, lease_seconds: int) -> JobRecord | None: ...
+    def heartbeat(
+        self,
+        job_id: str,
+        claim_token: str,
+        lease_seconds: int,
+        now: datetime | None = None,
+    ) -> JobRecord: ...
     def recover_stale(self, now: datetime | None = None) -> tuple[str, ...]: ...
     def retries_of(self, job_id: str) -> tuple[JobRecord, ...]: ...
     def count(self) -> int: ...
 
 
 def _claimed(record: JobRecord, worker_id: str, lease_seconds: int) -> JobRecord:
+    if lease_seconds <= 0:
+        raise ValueError("lease_seconds must be positive")
     now = utc_now()
     return record.model_copy(
         update={
@@ -48,6 +57,25 @@ def _claimed(record: JobRecord, worker_id: str, lease_seconds: int) -> JobRecord
             "started_at": record.started_at or now,
             "claim_token": f"claim_{uuid4().hex}",
             "claimed_by": worker_id,
+            "heartbeat_at": now,
+            "lease_expires_at": now + timedelta(seconds=lease_seconds),
+        },
+        deep=True,
+    )
+
+
+def _heartbeated(
+    record: JobRecord,
+    claim_token: str,
+    lease_seconds: int,
+    now: datetime,
+) -> JobRecord:
+    if lease_seconds <= 0:
+        raise ValueError("lease_seconds must be positive")
+    if record.status != JobStatus.RUNNING or record.claim_token != claim_token:
+        raise ConflictError("WORKER_CLAIM_LOST", "Worker claim is no longer valid.")
+    return record.model_copy(
+        update={
             "heartbeat_at": now,
             "lease_expires_at": now + timedelta(seconds=lease_seconds),
         },
@@ -150,6 +178,22 @@ class InMemoryJobRepository:
             claimed = _claimed(queued[0], worker_id, lease_seconds)
             self._jobs[claimed.job_id] = claimed
             return deepcopy(claimed)
+
+    def heartbeat(
+        self,
+        job_id: str,
+        claim_token: str,
+        lease_seconds: int,
+        now: datetime | None = None,
+    ) -> JobRecord:
+        heartbeat_at = now or utc_now()
+        with self._lock:
+            try:
+                updated = _heartbeated(self._jobs[job_id], claim_token, lease_seconds, heartbeat_at)
+            except KeyError as exc:
+                raise NotFoundError("Job") from exc
+            self._jobs[job_id] = updated
+            return deepcopy(updated)
 
     def recover_stale(self, now: datetime | None = None) -> tuple[str, ...]:
         recovered_at = now or utc_now()
@@ -346,6 +390,30 @@ class SQLiteJobRepository:
             )
             connection.commit()
             return claimed
+
+    def heartbeat(
+        self,
+        job_id: str,
+        claim_token: str,
+        lease_seconds: int,
+        now: datetime | None = None,
+    ) -> JobRecord:
+        heartbeat_at = now or utc_now()
+        with self._connection() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            row = connection.execute(
+                "SELECT payload_json FROM jobs WHERE job_id = ?", (job_id,)
+            ).fetchone()
+            if row is None:
+                connection.rollback()
+                raise NotFoundError("Job")
+            updated = _heartbeated(self._decode(row), claim_token, lease_seconds, heartbeat_at)
+            connection.execute(
+                "UPDATE jobs SET payload_json = ? WHERE job_id = ?",
+                (updated.model_dump_json(), updated.job_id),
+            )
+            connection.commit()
+            return updated
 
     def recover_stale(self, now: datetime | None = None) -> tuple[str, ...]:
         recovered_at = now or utc_now()

@@ -12,6 +12,7 @@ from pydantic import Field, field_validator, model_validator
 from dohaaudio.contracts import (
     API_CONTRACT_VERSION,
     PROVIDER_ID,
+    Capability,
     FrozenModel,
     ModelManifest,
     StructuredError,
@@ -84,6 +85,9 @@ class TrainingConfig(FrozenModel):
     config_version: str = Field(min_length=1)
     model_manifest_id: str = Field(min_length=1)
     dataset_manifest_id: str = Field(min_length=1)
+    capability: Capability
+    input_format: str = Field(min_length=1)
+    output_format: str = Field(min_length=1)
     batch_size: int = Field(gt=0)
     learning_rate: float = Field(gt=0)
     max_epochs: int | None = Field(default=None, gt=0)
@@ -191,8 +195,12 @@ class TrainingReadinessService:
                 reasons.append("MODEL_PROVIDER_INCOMPATIBLE")
             if model.api_contract_version != API_CONTRACT_VERSION:
                 reasons.append("MODEL_CONTRACT_VERSION_INCOMPATIBLE")
-            if not model.capabilities:
-                reasons.append("MODEL_CAPABILITY_MISSING")
+            if config.capability not in model.capabilities:
+                reasons.append("MODEL_CAPABILITY_INCOMPATIBLE")
+            if config.input_format not in model.input_formats:
+                reasons.append("MODEL_INPUT_FORMAT_INCOMPATIBLE")
+            if config.output_format not in model.output_formats:
+                reasons.append("MODEL_OUTPUT_FORMAT_INCOMPATIBLE")
         unique_reasons = tuple(dict.fromkeys(reasons))
         return TrainingReadinessReport(
             status=ReadinessStatus.BLOCKED if unique_reasons else ReadinessStatus.READY,

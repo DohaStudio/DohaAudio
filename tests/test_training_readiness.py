@@ -107,6 +107,34 @@ def test_invalid_dataset_and_contract_mismatch_are_blocked() -> None:
     assert "MODEL_CONTRACT_VERSION_INCOMPATIBLE" in report.reasons
 
 
+@pytest.mark.parametrize(
+    ("updates", "reason"),
+    [
+        ({"capability": "stem_separation"}, "MODEL_CAPABILITY_INCOMPATIBLE"),
+        ({"input_format": "audio/flac"}, "MODEL_INPUT_FORMAT_INCOMPATIBLE"),
+        ({"output_format": "audio/flac"}, "MODEL_OUTPUT_FORMAT_INCOMPATIBLE"),
+    ],
+)
+def test_model_capability_and_formats_are_checked(updates: dict[str, object], reason: str) -> None:
+    model = fake_model_manifest().model_copy(
+        update={
+            "model_manifest_id": "fake/restricted",
+            "capabilities": ("music_generation",),
+            "input_formats": ("application/json",),
+            "output_formats": ("audio/wav",),
+        }
+    )
+    datasets = DatasetManifestRegistry()
+    datasets.register(valid_dataset_manifest())
+    models = InMemoryManifestRegistry()
+    models.register(model)
+    service = TrainingReadinessService(datasets, models)
+    config = valid_training_config(model_manifest_id=model.model_manifest_id, **updates)
+    report = service.validate_training_readiness(config, now=NOW)
+    assert report.status == ReadinessStatus.BLOCKED
+    assert reason in report.reasons
+
+
 def test_invalid_training_config_and_output_policy_are_rejected() -> None:
     payload = valid_training_config().model_dump()
     payload["batch_size"] = 0

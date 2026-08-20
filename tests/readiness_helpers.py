@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 
+from dohaaudio.contracts import Capability
 from dohaaudio.datasets import (
     CommercialUsageStatus,
     DatasetEntry,
@@ -93,6 +94,9 @@ def valid_training_config(**updates: object) -> TrainingConfig:
         "config_version": "1.0.0",
         "model_manifest_id": FAKE_MANIFEST_ID,
         "dataset_manifest_id": "dataset-manifest/audio/test/v1",
+        "capability": Capability.MUSIC_GENERATION,
+        "input_format": "application/json",
+        "output_format": "audio/wav",
         "batch_size": 1,
         "learning_rate": 0.0001,
         "max_steps": 10,

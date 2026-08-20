@@ -31,7 +31,15 @@ def test_packaged_dataset_fixture_matches_schema_and_integrity_contract() -> Non
     schema = json.loads(Path("schemas/dataset-manifest.schema.json").read_text(encoding="utf-8"))
     manifest = DatasetManifest.model_validate(fixture)
     assert set(schema["required"]) == set(fixture)
+    assert schema["$id"].endswith("dataset-manifest-v1.schema.json")
     assert validate_dataset_manifest(manifest) == ()
+
+
+def test_dataset_manifest_rejects_an_unrecognized_schema_version_field() -> None:
+    payload = valid_dataset_manifest().model_dump()
+    payload["schema_version"] = "2.0"
+    with pytest.raises(ValidationError):
+        DatasetManifest(**payload)
 
 
 def test_dataset_manifest_rejects_missing_or_invalid_checksum() -> None:

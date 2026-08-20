@@ -6,8 +6,11 @@ from datetime import timedelta
 from pathlib import Path
 from threading import Event, Lock
 
+import pytest
+
 from dohaaudio.bootstrap import bootstrap_persistent_runtime, bootstrap_runtime
-from dohaaudio.contracts import CreateJobRequest, JobStatus, utc_now
+from dohaaudio.contracts import Capability, CreateJobRequest, JobStatus, utc_now
+from dohaaudio.errors import ConflictError, NotFoundError
 from dohaaudio.providers import FakeAudioProvider
 
 
@@ -113,3 +116,44 @@ def test_stale_running_job_is_failed_not_implicitly_requeued(
     record = runtime.jobs.get(job.job_id)
     assert record.status == JobStatus.FAILED
     assert record.error is not None and record.error.retryable is True
+
+
+def test_heartbeat_extends_lease_and_rejects_a_lost_claim(
+    make_request: Callable[..., CreateJobRequest],
+) -> None:
+    runtime = bootstrap_runtime()
+    runtime.create_job(make_request(job_id="job-heartbeat", idempotency_key="idem-heartbeat"))
+    claimed = runtime.jobs.claim_next("worker-heartbeat", 30)
+    assert claimed is not None and claimed.claim_token is not None
+    heartbeat_at = utc_now() + timedelta(seconds=10)
+    renewed = runtime.worker.heartbeat(claimed.job_id, claimed.claim_token, now=heartbeat_at)
+    assert renewed.heartbeat_at == heartbeat_at
+    assert renewed.lease_expires_at == heartbeat_at + timedelta(seconds=60)
+    with pytest.raises(ConflictError):
+        runtime.worker.heartbeat(claimed.job_id, "wrong-token", now=heartbeat_at)
+
+
+def test_artifact_batch_conflict_registers_no_partial_result(
+    make_request: Callable[..., CreateJobRequest],
+) -> None:
+    runtime = bootstrap_runtime()
+    job = runtime.create_job(
+        make_request(
+            job_id="job-batch-conflict",
+            idempotency_key="idem-batch-conflict",
+            capability=Capability.STEM_SEPARATION,
+        )
+    )
+    claimed = runtime.jobs.claim_next("worker-batch-conflict", 60)
+    assert claimed is not None and claimed.claim_token is not None
+    execution = runtime.providers.get("audio").execute(claimed)
+    conflicting = execution.artifacts[1].model_copy(update={"artifact_checksum": "f" * 64})
+    runtime.artifacts.register(conflicting)
+
+    failed = runtime.service.execute_claimed(job.job_id, claimed.claim_token)
+    assert failed.status == JobStatus.FAILED
+    assert failed.error is not None
+    assert failed.error.error_code == "ARTIFACT_IMMUTABILITY_CONFLICT"
+    assert runtime.artifacts.count() == 1
+    with pytest.raises(NotFoundError):
+        runtime.artifacts.get(execution.artifacts[0].artifact_id)

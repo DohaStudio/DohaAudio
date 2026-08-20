@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 
-from dohaaudio.contracts import JobResponse
+from dohaaudio.contracts import JobRecord, JobResponse
 from dohaaudio.repositories import JobRepository
 from dohaaudio.services import JobApplicationService
 
@@ -25,3 +26,6 @@ class ExecutionWorker:
 
     def recover_stale(self) -> tuple[str, ...]:
         return self.jobs.recover_stale()
+
+    def heartbeat(self, job_id: str, claim_token: str, *, now: datetime | None = None) -> JobRecord:
+        return self.jobs.heartbeat(job_id, claim_token, self.lease_seconds, now)

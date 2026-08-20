@@ -149,8 +149,15 @@ class JobApplicationService:
                 lease_expires_at=None,
                 heartbeat_at=None,
             )
-        except ConflictError:
-            raise
+        except ConflictError as exc:
+            if exc.error_code == "WORKER_CLAIM_LOST":
+                raise
+            current = self.jobs.get(job_id)
+            if current.status == JobStatus.CANCELLED:
+                return JobResponse.from_record(current)
+            updated = self._clear_claim(
+                self._failed(current, exc.error_code, exc.message, retryable=True)
+            )
         except ContractError as exc:
             current = self.jobs.get(job_id)
             if current.status == JobStatus.CANCELLED:

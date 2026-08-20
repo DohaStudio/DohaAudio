@@ -33,7 +33,7 @@ queued → cancelled
 
 `CreateJob`은 `queued` 상태를 반환합니다. Embedding host가 `ExecutionWorker.run_once()`를 호출하면 repository가 가장 오래된 queued Job을 atomic claim하고 `running`으로 전이한 뒤 Fake Provider를 실행합니다. 동시 claim은 하나만 성공하며 실행 전후 cancellation을 관찰합니다. `progress_percent=100`은 Artifact batch 등록 전까지 `running`일 수 있습니다.
 
-`SQLiteJobRepository`는 주입된 local DB 위치에 단일 `jobs` aggregate table과 claim/retry index를 schema bootstrap합니다. Job·idempotency·retry lineage는 process reopen 후에도 유지됩니다. DB 경로와 claim token, worker ID, lease·heartbeat는 외부 Job 응답에 포함하지 않습니다.
+`SQLiteJobRepository`는 주입된 local DB 위치에 단일 `jobs` aggregate table과 claim/retry index를 schema bootstrap합니다. Job·idempotency·retry lineage와 claim/recovery metadata는 process reopen 후에도 유지됩니다. 유효한 claim token의 heartbeat만 lease를 갱신할 수 있습니다. DB 경로와 claim token, worker ID, lease·heartbeat는 외부 Job 응답에 포함하지 않습니다.
 
 Queued Job은 restart 뒤 다시 claim할 수 있습니다. lease가 만료된 running Job은 Provider side effect 중복을 막기 위해 자동 queued 복귀나 성공 처리하지 않고 retryable `failed`로 복구합니다. 새 실행은 명시적 Retry가 새 Job ID로 생성합니다.
 
