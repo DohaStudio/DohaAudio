@@ -51,3 +51,5 @@ Traditional의 32개 review group은 MIDI+WAV이며 JSON이 없는 16개와 JSON
 - TrainingConfig·Training approval 미발급
 
 Complete relationship ≠ Training semantics, partial exclusion ≠ source deletion, structural candidate ≠ Dataset enrollment, role disposition ≠ Rights approval입니다.
+
+Role별 bounded evidence 수집과 human approval 경계는 [Semantic Role Evidence Review](semantic-role-evidence-review.md)에서 다룹니다. Evidence가 수집되어도 승인 authority가 없으면 기존 `review_required` disposition과 `inventory_ready=false`를 유지합니다.

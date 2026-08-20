@@ -42,6 +42,8 @@ Traditional partial 분포는 MIDI+WAV만 있는 group 16개와 JSON만 있는 o
 
 이는 representative schema/header 관찰일 뿐 전체 content 의미나 supervision 승인이 아닙니다. note sequence, WAV, 전체 JSON/MIDI collection은 읽지 않았습니다.
 
+후속 [Semantic Role Evidence Review](semantic-role-evidence-review.md)는 동일 membership에 결합된 deterministic plan으로 candidate별 JSON 32개와 MIDI header 32개를 추가 bounded 관찰했습니다. 이 후속 evidence도 raw value·note sequence·WAV를 읽지 않으며 semantic role을 자동 승인하지 않습니다.
+
 ## Ingestion policy
 
 `CompanionIngestionPolicy`는 `include_primary`, `include_companion`, `metadata_only`, `exclude`, `blocked`, `review_required` 상태를 표현합니다. 현재 두 candidate의 audio/MIDI/JSON/other role은 모두 `review_required`입니다. WAV primary, MIDI symbolic supervision, JSON metadata·label이라는 Training 의미는 아직 확정하지 않습니다.

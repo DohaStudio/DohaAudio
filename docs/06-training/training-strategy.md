@@ -37,4 +37,6 @@ Dry-run은 canonical config fingerprint와 deterministic planned `TrainingRun` i
 
 현재 실제 후보 조사에서는 권리 승인 Dataset Manifest, Music Generation training model/framework와 authoritative TrainingConfig가 없으므로 `TRAINING_EXECUTION_READY=false`입니다. 확인된 GPU 정보는 환경 inventory일 뿐 compatibility·VRAM 권장값 또는 실행 승인을 의미하지 않습니다. `TRAINING_APPROVAL_CONSUMED=false`, optimizer step·Checkpoint·GPU allocation·Evaluation execution은 모두 0입니다.
 
+Semantic role evidence와 review decision은 Training Admission 이전의 local 검토 계약입니다. Semantic role이 human-approved 상태가 되더라도 Rights·Integrity·Split·Model·Config·Environment·Execution Gate를 변경하지 않습니다. 현재 실제 candidate는 reviewer authority가 없으므로 모든 role이 `review_required`입니다.
+
 Rights Enrollment는 Training 이전의 별도 단계입니다. `DatasetEnrollmentService`가 Manifest·DatasetVersion·Split을 등록하더라도 model, TrainingConfig, environment, preflight와 explicit execution approval Gate를 자동 승인하지 않습니다. 현재 실제 후보에서 발급된 Manifest·Version·Split은 0개입니다.

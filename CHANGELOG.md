@@ -20,6 +20,10 @@
 - Music loop 108,000개 complete group과 Traditional music 9,945 complete·32 partial group의 metadata-only 검증 결과
 - candidate·path evidence·companion policy에 결합된 structural group·semantic role disposition 계약
 - Music complete group의 structural candidate와 Traditional 32개 partial/orphan review-required decision
+- candidate·path·companion·role policy에 결합된 deterministic bounded semantic role evidence sampling
+- raw value를 보존하지 않는 JSON schema-shape와 14-byte MIDI header consistency summary
+- immutable semantic evidence registry와 등록된 human reviewer authority만 승인 가능한 review decision
+- Music·Traditional 각각 JSON 32개·MIDI 32개 bounded 검증과 semantic role review-required 유지
 
 - SQLite 기반 영속 Job repository와 process restart 이후 idempotency·retry lineage 보존
 - atomic worker claim·lease, cancellation 관찰, structured failure와 stale-running fail-safe recovery
