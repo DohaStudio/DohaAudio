@@ -27,4 +27,6 @@ Dataset authority의 실제 root는 선택된 환경 변수에서만 읽고 외�
 
 Rights evidence adapter에는 sanitized source alias, logical identity, review/effective/expiry와 scope decision만 전달합니다. account·request ID, 사용자 이름·email, private URL, token, credential, 원문과 로컬 경로는 tracked fixture·Manifest·report에 복사하지 않습니다.
 
+Archive inspection은 `extract()`·`extractall()`과 filesystem member write를 사용하지 않습니다. member 이름은 traversal·absolute/drive/UNC path·encoded traversal·case-insensitive collision을 검사하고, 외부 결과에는 raw archive/member filename 대신 candidate-bound opaque identity만 둡니다. encrypted·nested·corrupt member와 caller-supplied size·count·ratio ceiling 초과는 fail-closed 합니다.
+
 Training readiness는 rights/license/eligibility가 불명확하거나 evidence가 누락·미검토·만료된 경우 `BLOCKED`로 fail-closed 합니다. Dataset license, training permission, commercial usage, redistribution, model/weight license를 하나의 boolean으로 합치지 않습니다.

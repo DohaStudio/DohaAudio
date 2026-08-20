@@ -6,7 +6,7 @@
 
 ## 조사 방식
 
-후보 authority를 read-only로 조사했습니다. 먼저 directory와 file metadata를 inventory하고, 공개 registry·Manifest·권리 문서를 대조했습니다. 전체 audio decode, archive 해제, 전처리, Dataset 이동과 production Artifact 쓰기는 수행하지 않았습니다. 전체 root에서 reparse point는 발견되지 않았으며 resolver는 향후 symlink·junction·traversal을 fail-closed로 차단합니다.
+후보 authority를 read-only로 조사했습니다. 먼저 directory와 file metadata를 inventory하고, 공개 registry·Manifest·권리 문서를 대조했습니다. ZIP 후보는 central directory metadata만 읽었으며 전체 member payload read, audio decode, archive 해제, 전처리, Dataset 이동과 production Artifact 쓰기는 수행하지 않았습니다. 전체 root에서 reparse point는 발견되지 않았으며 resolver는 향후 symlink·junction·traversal을 fail-closed로 차단합니다.
 
 ## 후보별 inventory 재검증
 
@@ -32,15 +32,24 @@ Doha Voice는 voice consent와 user recording 사실이 기록되어 있지만 �
 | `aihub-098-music-loop-package` | archive 외부 evidence 없음 | `unknown` | `unknown` | `unknown` | review 불가 |
 | `aihub-209-traditional-music-package` | archive 외부 evidence 없음 | `unknown` | `unknown` | `unknown` | review 불가 |
 
-Voice evidence는 candidate-level 차단 근거이며 승인 Dataset Manifest가 없으므로 enrollment용 Manifest identity에 결합하지 않았습니다. AIHub의 directory 이름과 `Training` 하위 이름은 공급자 Training permission을 의미하지 않습니다. ZIP 내부는 열거나 추측하지 않았습니다.
+Voice evidence는 candidate-level 차단 근거이며 승인 Dataset Manifest가 없으므로 enrollment용 Manifest identity에 결합하지 않았습니다. AIHub의 directory 이름과 `Training` 하위 이름은 공급자 Training permission을 의미하지 않습니다. ZIP member payload는 열거나 추측하지 않았습니다.
+
+## Archive membership inspection
+
+| candidate ID | coverage | member count | extension summary | encrypted | nested | corrupt | path safety |
+|---|---:|---:|---|---:|---:|---:|---|
+| `aihub-098-music-loop-package` | 352/352 | 324,000 | JSON·MIDI·WAV 각 108,000 | 0 | 0 | 0 | 324,000 leading `/`, `false` |
+| `aihub-209-traditional-music-package` | 20/20 | 29,883 | JSON·MIDI·WAV 각 9,961 | 0 | 0 | 0 | 29,883 leading `/`, `false` |
+
+두 candidate의 central directory는 모두 읽혔으므로 member collection visibility는 확보됐습니다. 그러나 모든 member 이름이 leading `/`로 저장되어 normalized relative path policy를 통과하지 못합니다. WAV는 media candidate로 분류되지만 unsafe path 때문에 지원 member가 아니며 JSON·MIDI는 현행 audio Dataset media contract 밖입니다. Discovery는 central-directory CRC metadata만 확인하고 content CRC·SHA-256을 검증하지 않았습니다.
 
 ## Dataset enrollment
 
 | candidate ID | Manifest enrolled | DatasetVersion issued | inventory match | split frozen | blocker |
 |---|---:|---:|---:|---:|---|
 | `doha-voice-registry-v1` | no | no | 미검증 | no | AI Training 승인 false, unsupported 37개, current checksum 미완료 |
-| `aihub-098-music-loop-package` | no | no | 미검증 | no | evidence·archive membership·media policy·checksum 없음 |
-| `aihub-209-traditional-music-package` | no | no | 미검증 | no | evidence·archive membership·media policy·checksum 없음 |
+| `aihub-098-music-loop-package` | no | no | 미검증 | no | evidence 없음, leading `/` path 324,000, JSON·MIDI unsupported, content checksum 미계산 |
+| `aihub-209-traditional-music-package` | no | no | 미검증 | no | evidence 없음, leading `/` path 29,883, JSON·MIDI unsupported, content checksum 미계산 |
 
 실제 후보에서 missing member, extra member, identity/checksum/media/provenance mismatch를 0으로 증명할 Manifest가 없으므로 integrity를 통과로 표시하지 않습니다. 승인 후보용 synthetic contract test에서만 exact match와 deterministic split·version immutability를 검증합니다.
 
@@ -49,6 +58,9 @@ Voice evidence는 candidate-level 차단 근거이며 승인 Dataset Manifest가
 | Gate | 현재 결과 | 근거 |
 |---|---|---|
 | `DATASET_AUTHORITY_VALID` | 세 후보 `true` | 각각 별도 exact scope와 logical candidate identity를 read-only로 재확인 |
+| `ARCHIVE_INSPECTION_COMPLETE` | archive 후보 `true` | 372/372 central directory를 끝까지 검사 |
+| `ARCHIVE_MEMBERSHIP_KNOWN` | archive 후보 `true` | central directory의 전체 member collection과 safe opaque identity 확인 |
+| `ARCHIVE_PATH_SAFETY_PASS` | archive 후보 `false` | 모든 member 이름이 leading `/` |
 | `RIGHTS_GATE_PASS` | `false` | 승인 evidence 없음 또는 review/restriction 상태 |
 | `DATASET_INTEGRITY_PASS` | `false` | 승인 membership·현재 content checksum 재검증·지원 형식 정책 미완료 |
 | `DATASET_SPLIT_FROZEN` | `false` | 승인 Dataset Manifest가 없어 split 미발급 |
@@ -67,7 +79,9 @@ resampling, channel handling, normalization, duration, silence 및 corrupt/unsup
 ## Side-effect 계수
 
 - 원본 Dataset mutation: 0
+- archive mutation: 0
 - archive extraction: 0
+- extracted file: 0
 - Dataset decode: 0
 - production Artifact write: 0
 - model download/load: 0
@@ -79,6 +93,10 @@ resampling, channel handling, normalization, duration, silence 및 corrupt/unsup
 ## 경고
 
 - Dataset possession ≠ Training permission
+- Archive visibility ≠ Dataset enrollment
+- Archive membership known ≠ AI Training permission
+- Inspection PASS ≠ Integrity PASS
+- Integrity PASS ≠ Training Ready
 - Training permission ≠ commercial permission
 - commercial permission ≠ redistribution permission
 - `PRE_TRAINING_READY` ≠ `TRAINING_EXECUTION_READY`

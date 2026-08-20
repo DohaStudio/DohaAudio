@@ -11,6 +11,10 @@
 - 공급자 원문과 분리된 normalized rights evidence adapter와 scope별 권리 결정
 - exact inventory·evidence 조건을 모두 통과할 때만 Manifest·DatasetVersion·Split을 등록하는 enrollment Gate
 - 실제 후보 세 scope의 권리 재검토 결과와 Manifest·Version·Split 미발급 상태
+- extract 없이 ZIP central directory와 member metadata를 검사하는 Archive Inspector boundary
+- path traversal·Windows path·normalized identity 충돌·encryption·nested archive·corruption·resource limit 차단 계약
+- Discovery와 bounded full-checksum mode, path-free `ArchiveInspectionResult`와 기존 enrollment inventory mapping
+- archive 후보 372개·353,883 member의 metadata-only 검사 결과와 leading `/` path safety 차단 상태
 
 - SQLite 기반 영속 Job repository와 process restart 이후 idempotency·retry lineage 보존
 - atomic worker claim·lease, cancellation 관찰, structured failure와 stale-running fail-safe recovery

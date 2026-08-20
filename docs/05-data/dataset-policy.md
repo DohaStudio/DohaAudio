@@ -57,9 +57,14 @@ DohaData/audio/
 - `RightsEvidenceSource` adapter는 공급자별 raw 문서를 core와 분리하고 path-free `NormalizedRightsEvidence`로 변환합니다.
 - `DatasetEnrollmentService`는 보유·접근·AI Training 승인, evidence identity·유효기간, exact inventory와 caller가 명시한 split count가 모두 유효할 때만 기존 `DatasetManifestRegistry`에 등록합니다.
 - commercial use, redistribution, derived-model distribution과 generated-output use는 AI Training 승인과 독립적으로 유지합니다.
+- `ArchiveInspector`는 concrete ZIP parser를 enrollment에서 분리하고 caller가 명시한 resource policy 아래 central directory와 member metadata를 read-only로 검사합니다.
+- archive member 이름은 Unicode·separator·encoded traversal을 정규화하고 leading slash, drive/UNC path, `..`, case-insensitive·separator collision을 차단합니다. 공개 결과에는 raw filename 대신 opaque logical identity만 기록합니다.
+- Discovery의 CRC metadata는 content 검증이 아니며 `FULL_CHECKSUM` mode의 bounded stream SHA-256·CRC 검증 전에는 Dataset checksum을 채우지 않습니다.
+- encrypted·nested·corrupt·부분 검사와 unsupported member는 숨겨서 제외하지 않으며, 명시적 exclusion 정책이 없으면 candidate enrollment를 차단합니다.
 
 ## 관련 결정
 
 - [ADR-003 Dataset Policy](../10-decisions/ADR-003-dataset-policy.md)
 - [실제 Dataset Admission 상태](real-dataset-admission.md)
 - [ADR-007 Dataset Authority와 Training Admission](../10-decisions/ADR-007-dataset-authority-training-admission.md)
+- [ADR-008 Read-only Archive Membership Inspection](../10-decisions/ADR-008-read-only-archive-membership-inspection.md)
