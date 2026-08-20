@@ -9,7 +9,7 @@
 | Requirements | [요구사항](02-requirements/requirements.md) | [계획] |
 | Architecture | [Provider Architecture](03-architecture/provider-architecture.md) | [구현] |
 | Models | [Model Manifest](04-models/model-manifest.md) | [구현] |
-| Data | [Dataset 정책](05-data/dataset-policy.md) · [실제 Admission](05-data/real-dataset-admission.md) · [Archive Inspection](05-data/archive-membership-inspection.md) · [Path·Companion Policy](05-data/archive-path-companion-policy.md) · [Role Disposition Policy](05-data/archive-role-disposition-policy.md) | authority·rights·archive·path/companion/role Gate [구현], 승인 Dataset [미확보] |
+| Data | [Dataset 정책](05-data/dataset-policy.md) · [실제 Admission](05-data/real-dataset-admission.md) · [Archive Inspection](05-data/archive-membership-inspection.md) · [Path·Companion Policy](05-data/archive-path-companion-policy.md) · [Role Disposition Policy](05-data/archive-role-disposition-policy.md) · [Semantic Evidence Review](05-data/semantic-role-evidence-review.md) | authority·rights·archive·path/companion/role/evidence Gate [구현], 승인 Dataset [미확보] |
 | Training | [Training 전략](06-training/training-strategy.md) | preflight·dry-run [구현], 실제 Training [미구현] |
 | Evaluation | [Evaluation 전략](07-evaluation/evaluation-strategy.md) | metadata 계약 [구현], 실행 [미구현] |
 | Runtime | [Runtime 계약](08-runtime/runtime-contract.md) | [구현] |

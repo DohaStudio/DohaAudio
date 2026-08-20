@@ -14,5 +14,6 @@
 | [ADR-008](ADR-008-read-only-archive-membership-inspection.md) | Read-only Archive Membership Inspection | 승인됨 [구현] |
 | [ADR-009](ADR-009-archive-path-companion-policy.md) | Candidate-specific Archive Path와 Companion Policy | 승인됨 [구현] |
 | [ADR-010](ADR-010-candidate-role-disposition-partial-group-policy.md) | Candidate Role Disposition과 Partial Companion Policy | 승인됨 [구현] |
+| [ADR-011](ADR-011-semantic-role-evidence-review-boundary.md) | Semantic Role Evidence Review와 승인 경계 | 승인됨 [구현] |
 
 결정이 대체되면 기존 ADR을 삭제하지 않고 상태와 대체 ADR 링크를 기록합니다.

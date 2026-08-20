@@ -33,4 +33,6 @@ Role disposition decision은 candidate·path evidence·companion policy exact bi
 
 Candidate path interpretation은 generic security exception이 아닙니다. candidate·policy identity에 결합된 exactly-one-leading-slash evidence만 별도 logical view로 해석하고 raw unsafe 상태를 보존합니다. interpreted result에는 raw filename 대신 fingerprint·opaque member/group ID만 남기며 mixed/double-leading pattern과 해석 후 traversal·drive·UNC·colon·collision은 차단합니다. Companion probe는 bounded representative JSON key summary와 MIDI header로 제한하고 raw value·binary·filename을 tracked output에 복사하지 않습니다.
 
+Semantic role evidence는 filesystem enumeration 순서가 아닌 opaque archive/member identity로 deterministic sample을 선택합니다. JSON은 caller ceiling 내에서 parse한 뒤 schema fingerprint와 고정된 key category count만 남기고 raw value·key·문서를 폐기합니다. MIDI는 14-byte SMF header distribution만 남기며 raw byte와 note sequence를 보존하지 않습니다. WAV content probe와 decode는 수행하지 않습니다. Evidence fingerprint는 candidate membership과 path·companion·role policy identity에 결합되고, human approval은 policy에 등록된 reviewer authority와 exact evidence identity가 모두 일치해야 합니다.
+
 Training readiness는 rights/license/eligibility가 불명확하거나 evidence가 누락·미검토·만료된 경우 `BLOCKED`로 fail-closed 합니다. Dataset license, training permission, commercial usage, redistribution, model/weight license를 하나의 boolean으로 합치지 않습니다.
