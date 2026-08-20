@@ -1,5 +1,7 @@
 # 보안 정책
 
+Reviewer authority의 public audit identity는 opaque logical ID만 허용합니다. 실제 이메일·account profile·private note는 tracked contract에 저장하지 않으며 authentication mapping은 private integration boundary에 둡니다. Expired·revoked·wrong-scope authority와 forged request/decision identity는 fail-closed합니다.
+
 > 문서 상태: Runtime 요청·응답 보호 [구현], 운영 인증·권한 [계획]
 
 ## 저장소 보호

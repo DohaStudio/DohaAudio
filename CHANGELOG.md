@@ -24,6 +24,10 @@
 - raw value를 보존하지 않는 JSON schema-shape와 14-byte MIDI header consistency summary
 - immutable semantic evidence registry와 등록된 human reviewer authority만 승인 가능한 review decision
 - Music·Traditional 각각 JSON 32개·MIDI 32개 bounded 검증과 semantic role review-required 유지
+- versioned reviewer authority registry와 exact candidate·role·policy·approve/reject scope
+- effective·expiry·revocation을 decision 생성과 downstream 소비에서 재검증하는 fail-closed 경계
+- immutable semantic review request·resolution·supersession과 one-request/one-decision audit lineage
+- authentication과 domain authorization을 분리한 synthetic-only human semantic review workflow
 
 - SQLite 기반 영속 Job repository와 process restart 이후 idempotency·retry lineage 보존
 - atomic worker claim·lease, cancellation 관찰, structured failure와 stale-running fail-safe recovery
