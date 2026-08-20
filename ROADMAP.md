@@ -5,7 +5,7 @@
 | Phase | 목표 | 상태 | 주요 산출물 |
 |---|---|---|---|
 | 1 | Repository Foundation | [계획] | 문서 체계, 작업 규칙, 기본 계약 |
-| 2 | Dataset Strategy | [진행 중] | Manifest·Version·split·integrity·rights Gate [구현], 실제 Dataset [미구현] |
+| 2 | Dataset Strategy | [진행 중] | Manifest·Version·split·integrity·rights·authority admission [구현], 승인 Dataset [미확보] |
 | 3 | Training | [진행 중] | Run/config·preflight·dry-run [구현], optimizer 실행 [미구현] |
 | 4 | Music Generation | [계획] | 교체 가능한 Music Generator와 Instrumental 기능 |
 | 5 | Stem Separation | [계획] | Stem 모델 Adapter와 출력 계약 |
@@ -26,4 +26,4 @@
 
 ## 현재 범위
 
-학습 전 Runtime·Readiness Foundation은 SQLite Job persistence, worker claim/recovery, Dataset·rights validation과 read-only dry-run 범위에서 구현했습니다. 이는 Phase 2·3·7·8 전체 완료 판정이 아닙니다. Dataset Migration, 모델 다운로드·load, optimizer step, Checkpoint, 실제 Music Generation·Stem Separation·Audio Analysis, GPU Runtime과 DohaMusic 실제 연동은 수행하지 않았습니다.
+학습 전 Runtime·Readiness·Admission Foundation은 SQLite Job persistence, worker claim/recovery, Dataset authority resolver·inventory, rights validation과 read-only dry-run 범위에서 구현했습니다. 실제 후보 세 scope는 모두 fail-closed로 차단됐습니다. 이는 Phase 2·3·7·8 전체 완료 판정이 아니며 Dataset Migration, 모델 다운로드·load, optimizer step, Checkpoint, 실제 Music Generation·Stem Separation·Audio Analysis, GPU Runtime과 DohaMusic 실제 연동은 수행하지 않았습니다.

@@ -10,5 +10,6 @@
 | [ADR-004](ADR-004-artifact-lifecycle.md) | Artifact Lifecycle | 제안됨 |
 | [ADR-005](ADR-005-pre-training-runtime-foundation.md) | Pre-Training Runtime Foundation | 승인됨 [구현] |
 | [ADR-006](ADR-006-pre-training-readiness.md) | Pre-Training Readiness Foundation | 승인됨 [구현] |
+| [ADR-007](ADR-007-dataset-authority-training-admission.md) | Dataset Authority와 Training Admission | 승인됨 [구현] |
 
 결정이 대체되면 기존 ADR을 삭제하지 않고 상태와 대체 ADR 링크를 기록합니다.

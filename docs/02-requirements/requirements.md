@@ -19,6 +19,8 @@
 | FR-010 | Provider API 계약 버전을 명시해야 한다. | [구현] |
 | FR-011 | 결과를 경로가 아닌 Asset/Artifact 식별자와 Metadata로 반환해야 한다. | [구현] |
 | FR-012 | 다른 AI Provider를 직접 호출하지 않아야 한다. | [구현] |
+| FR-013 | 주입된 Dataset authority를 read-only로 조사하고 경로를 공개 계약에 노출하지 않아야 한다. | [구현] |
+| FR-014 | Dataset·rights·split·model·config·environment·execution admission을 독립 Gate로 판단해야 한다. | [구현] |
 
 ## 비기능 요구사항
 
