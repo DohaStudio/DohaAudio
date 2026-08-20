@@ -11,11 +11,11 @@ PR #8의 generic inspector는 두 실제 candidate의 모든 leading `/` member�
 ## 결정
 
 1. Generic `ZipArchiveInspector`의 leading-slash 차단은 변경하지 않습니다.
-2. 별도 `ArchivePathInterpretationPolicy`를 policy ID·version·candidate ID에 결합하고 exactly-one-leading-slash rule만 명시적으로 해석합니다.
+2. 별도 `ArchivePathInterpretationPolicy`를 policy ID·version·candidate ID·승인된 evidence fingerprint에 결합하고 exactly-one-leading-slash rule만 명시적으로 해석합니다. 계산된 fingerprint 불일치는 fail-closed 합니다.
 3. raw unsafe 상태, raw member fingerprint, interpreted opaque identity와 evidence fingerprint를 함께 보존합니다. source archive는 rewrite·rename·repack·extract하지 않습니다.
 4. mixed/no-leading/double-leading convention과 해석 후 traversal·absolute/drive/UNC/colon·empty path·NFKC/separator/case collision은 fail-closed 합니다.
 5. Companion grouping은 interpreted directory-bound stem의 opaque ID와 extension role만 사용합니다. raw filename과 content 의미를 public result에 포함하지 않습니다.
-6. `CompanionIngestionPolicy`는 include·metadata-only·exclude·blocked·review 상태를 표현하지만 관계 발견만으로 WAV primary, MIDI supervision 또는 JSON label을 승인하지 않습니다.
+6. `CompanionIngestionPolicy`는 include·metadata-only·exclude·blocked·review 상태를 표현하지만 관계 발견만으로 WAV primary, MIDI supervision 또는 JSON label을 승인하지 않습니다. ingestion view는 relationship evidence의 companion policy ID·version이 적용 정책과 정확히 일치할 때만 생성합니다.
 7. Representative JSON probe는 bounded schema/key 관찰, MIDI probe는 header 관찰로 제한합니다. 전체 JSON/MIDI parse, audio decode와 checksum scan은 수행하지 않습니다.
 8. Path·companion policy는 기존 Rights·Integrity·Enrollment·Training Gate를 우회하지 않습니다.
 

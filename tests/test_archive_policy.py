@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import warnings
 import zipfile
 from pathlib import Path
@@ -50,11 +51,16 @@ def _inspector() -> ZipArchiveInspector:
     )
 
 
-def _path_policy(candidate_id: str = CANDIDATE) -> ArchivePathInterpretationPolicy:
+def _path_policy(
+    candidate_id: str = CANDIDATE,
+    *,
+    evidence_fingerprint: str = "0" * 64,
+) -> ArchivePathInterpretationPolicy:
     return ArchivePathInterpretationPolicy(
         policy_id=f"archive-path/{candidate_id}/v1",
         policy_version="1.0.0",
         candidate_id=candidate_id,
+        evidence_fingerprint=evidence_fingerprint,
         rule=ArchivePathInterpretationRule.SINGLE_LEADING_SLASH_ROOT_MARKER,
     )
 
@@ -75,9 +81,25 @@ def _interpret(path: Path, *, candidate_id: str = CANDIDATE):  # type: ignore[no
         path=path,
     )
     inspection = _inspector().inspect(source)
+    records: list[str] = []
+    with zipfile.ZipFile(path, mode="r") as archive:
+        for info in archive.infolist():
+            if info.is_dir():
+                continue
+            raw_fingerprint = hashlib.sha256(
+                "\x1f".join((candidate_id, source.archive_logical_id, info.filename)).encode(
+                    "utf-8", errors="surrogatepass"
+                )
+            ).hexdigest()
+            records.append(
+                f"{source.archive_logical_id}:{raw_fingerprint}:{info.file_size}:{info.CRC:08x}"
+            )
+    evidence = hashlib.sha256()
+    for record in sorted(records):
+        evidence.update(record.encode())
     membership = interpret_archive_paths(
         (ArchiveInterpretationInput(source=source, inspection=inspection),),
-        _path_policy(candidate_id),
+        _path_policy(candidate_id, evidence_fingerprint=evidence.hexdigest()),
     )
     return inspection, membership
 
@@ -129,6 +151,7 @@ def test_unapproved_or_unsafe_interpretation_patterns_fail_closed(
         ["/A/a.wav", "/a/A.wav"],
         ["/folder/a.wav", "/folder\\a.wav"],
         ["/caf\u00e9/a.wav", "/cafe\u0301/a.wav"],
+        ["/duplicate/a.wav", "/duplicate/a.wav"],
     ],
 )
 def test_interpretation_collisions_fail_closed(tmp_path: Path, names: list[str]) -> None:
@@ -150,6 +173,23 @@ def test_policy_is_candidate_bound(tmp_path: Path) -> None:
             _path_policy("different-candidate"),
         )
     assert exc_info.value.error_code == "ARCHIVE_INTERPRETATION_CANDIDATE_MISMATCH"
+
+
+def test_policy_evidence_fingerprint_mismatch_fails_closed(tmp_path: Path) -> None:
+    archive = tmp_path / "evidence-mismatch.zip"
+    _write_zip(archive, ["/a.wav"])
+    source = ArchiveSource(
+        candidate_id=CANDIDATE,
+        archive_logical_id="archive/one",
+        path=archive,
+    )
+    inspection = _inspector().inspect(source)
+    membership = interpret_archive_paths(
+        (ArchiveInterpretationInput(source=source, inspection=inspection),),
+        _path_policy(),
+    )
+    assert membership.path_interpretation_pass is False
+    assert "ARCHIVE_INTERPRETATION_EVIDENCE_MISMATCH" in membership.blocking_reasons
 
 
 def test_interpreted_mapping_is_deterministic_reversible_and_path_free(tmp_path: Path) -> None:
@@ -236,6 +276,17 @@ def test_orphan_and_directory_bound_same_basename_are_distinct(tmp_path: Path) -
     assert result.orphan_group_count == 1
 
 
+def test_companion_group_identity_is_candidate_namespaced(tmp_path: Path) -> None:
+    archive = tmp_path / "candidate-groups.zip"
+    _write_zip(archive, ["/same/a.wav", "/same/a.mid", "/same/a.json"])
+    _, first = _interpret(archive, candidate_id="candidate-one")
+    _, second = _interpret(archive, candidate_id="candidate-two")
+
+    assert {member.companion_group_id for member in first.members}.isdisjoint(
+        member.companion_group_id for member in second.members
+    )
+
+
 def test_companion_result_does_not_disclose_raw_filenames(tmp_path: Path) -> None:
     archive = tmp_path / "private.zip"
     names = ["/private/source.wav", "/private/source.mid", "/private/source.json"]
@@ -267,3 +318,29 @@ def test_ingestion_view_stays_blocked_without_semantic_policy_checksums_or_right
     assert rights_gate_pass is False
     with pytest.raises(ContractError):
         registry.get("dataset-manifest/not-issued")
+
+
+@pytest.mark.parametrize(
+    ("policy_id", "policy_version"),
+    [
+        ("archive-companion/different/v1", "1.0.0"),
+        (f"archive-companion/{CANDIDATE}/v1", "2.0.0"),
+    ],
+)
+def test_ingestion_view_rejects_companion_policy_identity_or_version_mismatch(
+    tmp_path: Path,
+    policy_id: str,
+    policy_version: str,
+) -> None:
+    archive = tmp_path / "policy-mismatch.zip"
+    _write_zip(archive, ["/foo/a.wav", "/foo/a.mid", "/foo/a.json"])
+    _, membership = _interpret(archive)
+    relationship_policy = _companion_policy()
+    relationships = analyze_companion_relationships(membership, relationship_policy)
+    ingestion_policy = relationship_policy.model_copy(
+        update={"policy_id": policy_id, "policy_version": policy_version}
+    )
+
+    with pytest.raises(ContractError) as exc_info:
+        build_candidate_ingestion_view(membership, relationships, ingestion_policy)
+    assert exc_info.value.error_code == "ARCHIVE_INGESTION_COMPANION_POLICY_MISMATCH"

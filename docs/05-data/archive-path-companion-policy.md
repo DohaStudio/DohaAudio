@@ -5,7 +5,7 @@
 
 ## 경계
 
-Generic `ZipArchiveInspector`는 leading `/`를 계속 unsafe로 차단합니다. 별도 `ArchivePathInterpretationPolicy`만 candidate ID, policy ID와 version에 결합된 exactly-one-leading-slash convention을 논리 root marker 후보로 해석합니다. source ZIP rename·rewrite·repack·extract는 수행하지 않습니다.
+Generic `ZipArchiveInspector`는 leading `/`를 계속 unsafe로 차단합니다. 별도 `ArchivePathInterpretationPolicy`만 candidate ID, policy ID, version과 승인된 evidence fingerprint에 결합된 exactly-one-leading-slash convention을 논리 root marker 후보로 해석합니다. 계산된 fingerprint가 정책 값과 다르면 fail-closed 합니다. source ZIP rename·rewrite·repack·extract는 수행하지 않습니다.
 
 해석 결과는 raw member fingerprint, interpreted member ID와 policy identity를 함께 보존하므로 내부에서 대응을 다시 검증할 수 있습니다. 공개 contract에는 raw filename, physical path와 member content를 포함하지 않습니다. mixed/no-leading/double-leading convention, empty path, traversal, encoded traversal, drive·UNC·colon path와 NFKC·separator·case collision은 fail-closed입니다.
 

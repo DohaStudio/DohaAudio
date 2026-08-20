@@ -53,6 +53,7 @@ class ArchivePathInterpretationPolicy(FrozenModel):
     policy_id: str = Field(min_length=1)
     policy_version: str = Field(min_length=1)
     candidate_id: str = Field(min_length=1)
+    evidence_fingerprint: str = Field(pattern=r"^[0-9a-f]{64}$")
     rule: ArchivePathInterpretationRule
 
     @model_validator(mode="after")
@@ -251,6 +252,9 @@ def interpret_archive_paths(
     evidence = hashlib.sha256()
     for record in sorted(evidence_records):
         evidence.update(record.encode())
+    evidence_fingerprint = evidence.hexdigest()
+    if evidence_fingerprint != policy.evidence_fingerprint:
+        reasons.append("ARCHIVE_INTERPRETATION_EVIDENCE_MISMATCH")
 
     collisions = _collision_indexes(candidates)
     members: list[InterpretedArchiveMember] = []
@@ -300,7 +304,7 @@ def interpret_archive_paths(
         policy_id=policy.policy_id,
         policy_version=policy.policy_version,
         candidate_id=policy.candidate_id,
-        evidence_fingerprint=evidence.hexdigest(),
+        evidence_fingerprint=evidence_fingerprint,
         archive_count=len(ordered),
         raw_member_count=raw_count,
         leading_slash_member_count=leading_count,
@@ -403,6 +407,14 @@ def build_candidate_ingestion_view(
         raise ContractError(
             "ARCHIVE_INGESTION_CANDIDATE_MISMATCH",
             "Archive ingestion inputs cannot cross candidate scopes.",
+        )
+    if (
+        relationships.policy_id != policy.policy_id
+        or relationships.policy_version != policy.policy_version
+    ):
+        raise ContractError(
+            "ARCHIVE_INGESTION_COMPANION_POLICY_MISMATCH",
+            "Companion relationship evidence must match the ingestion policy identity and version.",
         )
     unresolved = {
         CompanionDisposition.REVIEW_REQUIRED,
