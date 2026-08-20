@@ -74,4 +74,3 @@ Traditional의 MIDI+WAV 16개와 JSON-only 16개는 계속 group-level `review_r
 - `TRAINING_APPROVAL_CONSUMED=false`
 
 Observed schema ≠ semantic meaning, MIDI structure ≠ supervision role, audio member ≠ Training target, representative sample ≠ whole-Dataset proof, automated suggestion ≠ human approval입니다.
-

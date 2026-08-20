@@ -26,4 +26,3 @@ PR #10은 structural group과 semantic role을 분리했지만 실제 JSON·MIDI
 Music과 Traditional에서 각각 JSON 32개와 MIDI header 32개만 bounded 관찰했습니다. Music JSON은 2개, Traditional JSON은 3개 schema shape가 관찰됐고 MIDI header도 candidate별 구조 분포가 달랐습니다. 이 관찰은 semantic meaning 또는 whole-Dataset consistency를 증명하지 않습니다.
 
 실제 audio/MIDI/JSON decision은 모두 `review_required`, automatic approval은 0입니다. Music은 `structural_candidate_ready=true`, Traditional은 32 partial/orphan 때문에 false이며 두 candidate의 `inventory_ready`, Rights, Integrity, Split과 Training Gate는 모두 false입니다. Source archive mutation·extraction·WAV decode·full checksum·Dataset enrollment·Training은 수행하지 않았습니다.
-
