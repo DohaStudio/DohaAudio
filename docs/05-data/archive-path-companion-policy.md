@@ -49,3 +49,5 @@ Traditional partial 분포는 MIDI+WAV만 있는 group 16개와 JSON만 있는 o
 Music loop는 path와 relationship이 통과해도 policy review와 checksum이 미완료입니다. Traditional music은 relationship도 차단됩니다. 두 candidate 모두 `dataset_inventory_ready=false`, `RIGHTS_GATE_PASS=false`, `DATASET_INTEGRITY_PASS=false`, `DATASET_SPLIT_FROZEN=false`이며 Manifest·DatasetVersion·Split은 발급하지 않았습니다.
 
 Path interpretation ≠ source rewrite, companion relationship ≠ Training semantics, metadata relation ≠ supervision approval, path safety PASS ≠ Dataset integrity PASS입니다.
+
+Candidate별 complete·partial·orphan 구조 처분과 semantic role review는 [Archive Role Disposition과 Partial Group Policy](archive-role-disposition-policy.md)에서 별도 결정합니다.
