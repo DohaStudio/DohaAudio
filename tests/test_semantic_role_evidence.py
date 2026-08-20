@@ -601,6 +601,7 @@ def test_role_policy_integration_keeps_automatic_reviews_closed_and_accepts_synt
     }
     automatic = []
     human_approved = []
+    evidence_records = []
     evidence_policies = []
     for role in CompanionRole:
         evidence = collect_semantic_role_evidence(
@@ -617,6 +618,7 @@ def test_role_policy_integration_keeps_automatic_reviews_closed_and_accepts_synt
             reviewer_authorities=("synthetic-test-review-authority",),
         )
         proposed = proposed_roles[role]
+        evidence_records.append(evidence)
         evidence_policies.append(policy)
         automatic.append(review_semantic_role(evidence, policy, proposed))
         human_approved.append(
@@ -631,6 +633,7 @@ def test_role_policy_integration_keeps_automatic_reviews_closed_and_accepts_synt
     automatic_policy = apply_semantic_review_decisions(
         role_policy,
         automatic,
+        evidence_records,
         evidence_policies,
     )
     automatic_decision = decide_candidate_ingestion(
@@ -647,6 +650,7 @@ def test_role_policy_integration_keeps_automatic_reviews_closed_and_accepts_synt
     approved_policy = apply_semantic_review_decisions(
         role_policy,
         human_approved,
+        evidence_records,
         evidence_policies,
     )
     approved_decision = decide_candidate_ingestion(
@@ -665,6 +669,27 @@ def test_role_policy_integration_keeps_automatic_reviews_closed_and_accepts_synt
         apply_semantic_review_decisions(
             role_policy,
             human_approved,
+            evidence_records,
             policies_without_authority,
         )
     assert forged_error.value.error_code == "SEMANTIC_REVIEW_REVIEWER_AUTHORITY_MISMATCH"
+
+    forged_decisions = list(human_approved)
+    forged_decisions[0] = forged_decisions[0].model_copy(update={"evidence_fingerprint": "f" * 64})
+    with pytest.raises(ContractError) as evidence_error:
+        apply_semantic_review_decisions(
+            role_policy,
+            forged_decisions,
+            evidence_records,
+            evidence_policies,
+        )
+    assert evidence_error.value.error_code == "SEMANTIC_REVIEW_EVIDENCE_MISMATCH"
+
+    with pytest.raises(ContractError) as duplicate_error:
+        apply_semantic_review_decisions(
+            role_policy,
+            [*human_approved, human_approved[0]],
+            evidence_records,
+            evidence_policies,
+        )
+    assert duplicate_error.value.error_code == "SEMANTIC_REVIEW_ROLE_DUPLICATE"

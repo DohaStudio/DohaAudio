@@ -498,18 +498,57 @@ def review_semantic_role(
 def apply_semantic_review_decisions(
     role_policy: CandidateRoleDispositionPolicy,
     decisions: Iterable[SemanticRoleReviewDecision],
+    evidences: Iterable[SemanticRoleEvidence],
     evidence_policies: Iterable[SemanticRoleEvidencePolicy],
 ) -> CandidateRoleDispositionPolicy:
-    decisions_by_role = {decision.structural_role: decision for decision in decisions}
-    policies_by_role = {policy.structural_role: policy for policy in evidence_policies}
-    if set(decisions_by_role) != set(CompanionRole) or set(policies_by_role) != set(CompanionRole):
+    decision_records = tuple(decisions)
+    evidence_records = tuple(evidences)
+    policy_records = tuple(evidence_policies)
+    decisions_by_role = {decision.structural_role: decision for decision in decision_records}
+    evidences_by_role = {evidence.structural_role: evidence for evidence in evidence_records}
+    policies_by_role = {policy.structural_role: policy for policy in policy_records}
+    if (
+        len(decisions_by_role) != len(decision_records)
+        or len(evidences_by_role) != len(evidence_records)
+        or len(policies_by_role) != len(policy_records)
+    ):
+        raise ContractError(
+            "SEMANTIC_REVIEW_ROLE_DUPLICATE",
+            "Semantic review inputs must contain exactly one record per structural role.",
+        )
+    if (
+        set(decisions_by_role) != set(CompanionRole)
+        or set(evidences_by_role) != set(CompanionRole)
+        or set(policies_by_role) != set(CompanionRole)
+    ):
         raise ContractError(
             "SEMANTIC_REVIEW_ROLE_SET_INCOMPLETE",
-            "Every structural role requires an explicit review decision and authority policy.",
+            "Every structural role requires evidence, a review decision, and an authority policy.",
         )
     dispositions: dict[CompanionRole, CompanionDisposition] = {}
     for role, decision in decisions_by_role.items():
+        evidence = evidences_by_role[role]
         evidence_policy = policies_by_role[role]
+        _validate_review_binding(evidence, evidence_policy)
+        if (
+            decision.candidate_id != evidence.candidate_id
+            or decision.structural_role != evidence.structural_role
+            or decision.evidence_id != evidence.evidence_id
+            or decision.evidence_fingerprint != evidence.evidence_fingerprint
+            or decision.sampling_plan_id != evidence.sampling_plan_id
+            or decision.sampling_plan_version != evidence.sampling_plan_version
+            or decision.path_policy_id != evidence.path_policy_id
+            or decision.path_policy_version != evidence.path_policy_version
+            or decision.path_evidence_fingerprint != evidence.path_evidence_fingerprint
+            or decision.companion_policy_id != evidence.companion_policy_id
+            or decision.companion_policy_version != evidence.companion_policy_version
+            or decision.role_policy_id != evidence.role_policy_id
+            or decision.role_policy_version != evidence.role_policy_version
+        ):
+            raise ContractError(
+                "SEMANTIC_REVIEW_EVIDENCE_MISMATCH",
+                "Semantic review decisions must bind the exact current evidence record.",
+            )
         if (
             decision.candidate_id != role_policy.candidate_id
             or decision.role_policy_id != role_policy.policy_id
