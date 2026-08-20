@@ -25,4 +25,6 @@ SQLite DB 위치와 ArtifactResolver의 storage reference는 composition root에
 
 Dataset authority의 실제 root는 선택된 환경 변수에서만 읽고 외부 모델에는 authority ID, candidate ID와 opaque source key만 남깁니다. resolver는 symlink·junction·reparse point와 traversal을 차단하며 inventory는 파일을 변경하지 않습니다. tracked report에는 원본 파일명, 상대 경로, private registry row와 local root를 포함하지 않습니다.
 
+Rights evidence adapter에는 sanitized source alias, logical identity, review/effective/expiry와 scope decision만 전달합니다. account·request ID, 사용자 이름·email, private URL, token, credential, 원문과 로컬 경로는 tracked fixture·Manifest·report에 복사하지 않습니다.
+
 Training readiness는 rights/license/eligibility가 불명확하거나 evidence가 누락·미검토·만료된 경우 `BLOCKED`로 fail-closed 합니다. Dataset license, training permission, commercial usage, redistribution, model/weight license를 하나의 boolean으로 합치지 않습니다.

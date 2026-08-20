@@ -54,6 +54,9 @@ DohaData/audio/
 - `DatasetAuthorityResolver`는 missing/not-directory root, path traversal, symlink·junction·reparse escape를 차단하고 opaque sample/source ID만 inventory에 남깁니다.
 - checksum read는 명시적으로 요청할 때만 수행하고 inventory 과정에서 rename·move·delete·convert·normalize를 수행하지 않습니다.
 - 권리 Gate를 통과하지 못한 후보에는 실제 Dataset Manifest·Version·Split을 발급하지 않습니다.
+- `RightsEvidenceSource` adapter는 공급자별 raw 문서를 core와 분리하고 path-free `NormalizedRightsEvidence`로 변환합니다.
+- `DatasetEnrollmentService`는 보유·접근·AI Training 승인, evidence identity·유효기간, exact inventory와 caller가 명시한 split count가 모두 유효할 때만 기존 `DatasetManifestRegistry`에 등록합니다.
+- commercial use, redistribution, derived-model distribution과 generated-output use는 AI Training 승인과 독립적으로 유지합니다.
 
 ## 관련 결정
 

@@ -21,6 +21,7 @@
 | FR-012 | 다른 AI Provider를 직접 호출하지 않아야 한다. | [구현] |
 | FR-013 | 주입된 Dataset authority를 read-only로 조사하고 경로를 공개 계약에 노출하지 않아야 한다. | [구현] |
 | FR-014 | Dataset·rights·split·model·config·environment·execution admission을 독립 Gate로 판단해야 한다. | [구현] |
+| FR-015 | 권리 evidence를 candidate·Manifest·evidence ID·scope에 결합하고 승인된 exact membership만 Dataset으로 등록해야 한다. | Gate [구현], 승인 Dataset [미확보] |
 
 ## 비기능 요구사항
 

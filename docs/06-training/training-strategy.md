@@ -36,3 +36,5 @@ Dry-run은 canonical config fingerprint와 deterministic planned `TrainingRun` i
 `TrainingAdmissionService`는 `DATASET_AUTHORITY_VALID`, `RIGHTS_GATE_PASS`, `DATASET_INTEGRITY_PASS`, `DATASET_SPLIT_FROZEN`, `MODEL_SELECTED`, `TRAINING_CONFIG_VALID`, `ENVIRONMENT_PREFLIGHT_PASS`, `TRAINING_PREFLIGHT_PASS`, `TRAINING_EXECUTION_READY`를 별도 boolean으로 반환합니다. execution ready는 모든 Gate와 별도 실행 승인이 참일 때만 가능합니다.
 
 현재 실제 후보 조사에서는 권리 승인 Dataset Manifest, Music Generation training model/framework와 authoritative TrainingConfig가 없으므로 `TRAINING_EXECUTION_READY=false`입니다. 확인된 GPU 정보는 환경 inventory일 뿐 compatibility·VRAM 권장값 또는 실행 승인을 의미하지 않습니다. `TRAINING_APPROVAL_CONSUMED=false`, optimizer step·Checkpoint·GPU allocation·Evaluation execution은 모두 0입니다.
+
+Rights Enrollment는 Training 이전의 별도 단계입니다. `DatasetEnrollmentService`가 Manifest·DatasetVersion·Split을 등록하더라도 model, TrainingConfig, environment, preflight와 explicit execution approval Gate를 자동 승인하지 않습니다. 현재 실제 후보에서 발급된 Manifest·Version·Split은 0개입니다.
