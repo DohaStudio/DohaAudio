@@ -38,3 +38,5 @@ member count, filename bytes, per-member/total uncompressed bytes와 compression
 완전한 `ArchiveInspectionResult`만 기존 `DatasetInventory`로 변환할 수 있습니다. Discovery 결과는 SHA-256이 없어서 integrity가 false이고, blocked/partial result는 변환 자체를 거부합니다. 별도 archive registry나 rights registry는 만들지 않습니다.
 
 Archive visibility ≠ Dataset enrollment이며 Archive membership known ≠ AI Training permission입니다. Music loop과 Traditional music은 AI Training evidence가 없으므로 path policy가 해결되더라도 기존 `DatasetEnrollmentService`에서 계속 차단됩니다.
+
+Candidate-specific leading-slash 해석과 companion grouping은 [Archive Path와 Companion Policy](archive-path-companion-policy.md)에 기록합니다. 이 후속 layer는 raw inspection result와 generic leading-slash 차단을 변경하지 않습니다.

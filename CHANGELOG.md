@@ -15,6 +15,9 @@
 - path traversal·Windows path·normalized identity 충돌·encryption·nested archive·corruption·resource limit 차단 계약
 - Discovery와 bounded full-checksum mode, path-free `ArchiveInspectionResult`와 기존 enrollment inventory mapping
 - archive 후보 372개·353,883 member의 metadata-only 검사 결과와 leading `/` path safety 차단 상태
+- generic path 차단을 유지하는 candidate-bound single-leading-slash interpretation policy와 reversible opaque identity
+- JSON·MIDI·WAV directory-bound companion grouping 및 include·metadata·exclude·blocked·review disposition 계약
+- Music loop 108,000개 complete group과 Traditional music 9,945 complete·32 partial group의 metadata-only 검증 결과
 
 - SQLite 기반 영속 Job repository와 process restart 이후 idempotency·retry lineage 보존
 - atomic worker claim·lease, cancellation 관찰, structured failure와 stale-running fail-safe recovery

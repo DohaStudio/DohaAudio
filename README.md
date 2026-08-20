@@ -1,21 +1,21 @@
 # DohaAudio
 
 > 문서 상태: [계획]
-> 구현 상태: Runtime·Pre-Training Readiness·Dataset Admission·Enrollment·Archive Inspection Gate [구현], 승인 Dataset·실제 모델·Training [미구현]
+> 구현 상태: Runtime·Pre-Training Readiness·Dataset Admission·Enrollment·Archive Inspection·Path Interpretation Gate [구현], 승인 Dataset·실제 모델·Training [미구현]
 > 저장소: `DohaStudio/DohaAudio`
 > 공통 명세: `0.1.0` / `draft-baseline`
 > 명세 기준: `DohaStudio/.github` `main` (`1e4b480c8cbd6e51835f8550e685e9b136d8071d`)
 
 DohaAudio는 DohaMusic을 위한 음악 생성 및 일반 Audio AI Provider 프로젝트입니다. Music Generation뿐 아니라 Instrumental Generation, Stem Separation, Music Analysis, Dataset Pipeline, Training, Fine-tuning, Evaluation, Model Manifest와 독립 Runtime을 담당할 계획입니다.
 
-현재 저장소에는 Provider Runtime, Pre-Training Readiness와 Dataset Admission·Enrollment·Archive Membership Inspection Gate가 구현되어 있습니다. 교체 가능한 in-memory/SQLite Job repository, 단일 Job worker boundary, Dataset Manifest·권리 Gate, 주입식 read-only authority resolver, normalized rights evidence, ZIP central-directory inspection과 training dry-run을 검증합니다. 실제 Dataset, 모델, Checkpoint와 생성 음원은 포함하지 않습니다.
+현재 저장소에는 Provider Runtime, Pre-Training Readiness와 Dataset Admission·Enrollment·Archive Membership Inspection·Path Interpretation Gate가 구현되어 있습니다. 교체 가능한 in-memory/SQLite Job repository, 단일 Job worker boundary, Dataset Manifest·권리 Gate, 주입식 read-only authority resolver, normalized rights evidence, ZIP central-directory inspection, candidate-bound path·companion policy와 training dry-run을 검증합니다. 실제 Dataset, 모델, Checkpoint와 생성 음원은 포함하지 않습니다.
 
 ## 책임
 
 - Music Generation과 Instrumental Generation [계획]
 - Stem Separation [계획]
 - BPM·Key·Music Structure·Audio Quality Analysis [계획]
-- Dataset Manifest·split·integrity·권리 Gate, authority inventory와 read-only ZIP membership inspection [구현], 실제 Dataset Pipeline [미구현]
+- Dataset Manifest·split·integrity·권리 Gate, authority inventory, read-only ZIP membership inspection과 candidate path·companion policy [구현], 실제 Dataset Pipeline [미구현]
 - Training 계약·preflight·dry-run [구현], 실제 Training·Fine-tuning·Evaluation [미구현]
 - Checkpoint·공통 Model Registry [계획], Provider-local Model Manifest registry [구현]
 - Runtime Foundation과 Provider API [구현]
@@ -87,6 +87,7 @@ flowchart LR
 - [Dataset 정책](docs/05-data/dataset-policy.md)
 - [실제 Dataset Admission 상태](docs/05-data/real-dataset-admission.md)
 - [Archive Membership Inspection](docs/05-data/archive-membership-inspection.md)
+- [Archive Path와 Companion Policy](docs/05-data/archive-path-companion-policy.md)
 - [Training 전략](docs/06-training/training-strategy.md)
 - [Evaluation 전략](docs/07-evaluation/evaluation-strategy.md)
 - [Runtime 계약](docs/08-runtime/runtime-contract.md)
@@ -102,6 +103,8 @@ Pre-Training Readiness는 공통 Dataset Manifest 의미 계약에 맞춘 불변
 Dataset Admission Foundation은 `DOHAAUDIO_DATASET_ROOT`로 local authority 후보를 주입하고 root escape·symlink/junction·지원 형식·checksum·중복을 read-only로 검사한 뒤 공개 계약에는 logical ID만 반환합니다. Enrollment Gate는 공급자 원문과 분리된 evidence adapter를 통해 candidate·Manifest·evidence ID·scope를 결합하고 exact inventory membership을 기존 Dataset Manifest에 등록합니다. 현재 조사된 세 후보는 권리, 형식, membership 또는 승인 근거가 부족해 모두 `BLOCKED`이며 실제 Dataset Manifest·DatasetVersion·Split·TrainingConfig는 발급하지 않았습니다.
 
 Archive Membership Inspection Foundation은 ZIP 구현을 기존 enrollment와 분리하고 central directory를 extract 없이 순차 검사합니다. member path, case-insensitive identity, encryption, nested archive, compression ratio와 caller-supplied resource ceiling을 fail-closed로 검증하며 Discovery CRC metadata와 content SHA-256을 구분합니다. 실제 archive 후보는 central directory coverage 100%지만 모든 member 이름이 leading `/`이고 권리 evidence도 없어 enrollment는 계속 차단됩니다.
+
+Archive Path Interpretation은 generic leading-slash 차단을 유지한 채 두 candidate에만 exactly-one-leading-slash rule을 적용합니다. 해석 후 path safety는 두 candidate 모두 통과하지만 Music loop만 108,000개 companion triple이 완전하며 Traditional music은 32개 partial group 때문에 companion Gate가 차단됩니다. WAV·MIDI·JSON의 Training 의미와 ingestion disposition은 `review_required`이고 checksum·권리·enrollment Gate는 계속 false입니다.
 
 ```powershell
 python -m pip install -e ".[dev,runtime]"
