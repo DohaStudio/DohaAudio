@@ -3,6 +3,8 @@
 > 문서 상태: authentication Foundation [구현]
 > 실제 OAuth/OIDC provider·identity mapping·ReviewerAuthority·human approval: [미구현]
 
+Production provider 선택 상태와 fail-closed bootstrap은 [Production Reviewer Authentication](production-reviewer-authentication.md)을 따릅니다. 현재 provider 결정은 요구사항 부족으로 보류됐습니다.
+
 ## 경계
 
 ```text

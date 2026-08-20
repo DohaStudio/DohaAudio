@@ -4,6 +4,10 @@
 
 ### 추가
 
+- 미확정 deployment·identity 요구를 기록하는 production authentication provider no-selection decision
+- secret-free provider config, explicit enablement, fake-production 차단과 no-fallback bootstrap/factory
+- 검증 proof를 발급하지 않는 unavailable production adapter와 private mapping store protocol
+
 - 환경 변수로 주입되는 read-only Dataset authority resolver와 path-free logical inventory
 - root escape·symlink/junction·unsupported format·checksum·duplicate 차단 계약
 - Dataset·rights·split·model·config·environment·execution Gate를 분리한 Training Admission report
