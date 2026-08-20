@@ -61,6 +61,8 @@ DohaData/audio/
 - archive member 이름은 Unicode·separator·encoded traversal을 정규화하고 leading slash, drive/UNC path, `..`, case-insensitive·separator collision을 차단합니다. 공개 결과에는 raw filename 대신 opaque logical identity만 기록합니다.
 - Discovery의 CRC metadata는 content 검증이 아니며 `FULL_CHECKSUM` mode의 bounded stream SHA-256·CRC 검증 전에는 Dataset checksum을 채우지 않습니다.
 - encrypted·nested·corrupt·부분 검사와 unsupported member는 숨겨서 제외하지 않으며, 명시적 exclusion 정책이 없으면 candidate enrollment를 차단합니다.
+- candidate path interpretation은 generic inspector와 분리하고 policy ID·version·candidate ID·evidence fingerprint를 결합합니다. raw unsafe 상태를 보존하며 exactly-one-leading-slash 외의 pattern과 해석 후 traversal·drive·UNC·colon·collision을 차단합니다.
+- companion grouping은 해석된 directory-bound stem의 opaque ID와 extension role만 사용합니다. 관계 완전성은 Training 의미나 ingestion 승인을 뜻하지 않으며 role disposition이 `review_required`이면 inventory를 발급하지 않습니다.
 
 ## 관련 결정
 
@@ -68,3 +70,4 @@ DohaData/audio/
 - [실제 Dataset Admission 상태](real-dataset-admission.md)
 - [ADR-007 Dataset Authority와 Training Admission](../10-decisions/ADR-007-dataset-authority-training-admission.md)
 - [ADR-008 Read-only Archive Membership Inspection](../10-decisions/ADR-008-read-only-archive-membership-inspection.md)
+- [ADR-009 Candidate-specific Archive Path와 Companion Policy](../10-decisions/ADR-009-archive-path-companion-policy.md)

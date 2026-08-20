@@ -24,3 +24,5 @@ Music loop과 Traditional music authority는 ZIP package aggregate만 확인되�
 실제 372 archive의 central directory는 모두 읽혔고 353,883 member가 확인됐습니다. 모든 member 이름이 leading `/`여서 path safety는 false이며 JSON·MIDI는 현행 audio supported media 밖입니다. 실제 member/archive SHA-256, Manifest, DatasetVersion과 split은 발급하지 않았습니다.
 
 Archive inspection 성공은 Dataset rights, integrity 또는 Training readiness를 승인하지 않습니다. path normalization 또는 explicit exclusion/ingestion 정책이 필요하면 별도 검토하며 source archive를 rewrite하지 않습니다.
+
+후속 candidate-specific 해석은 [ADR-009](ADR-009-archive-path-companion-policy.md)에서 결정하며 이 ADR의 generic leading-slash 차단을 변경하지 않습니다.

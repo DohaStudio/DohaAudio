@@ -23,6 +23,7 @@
 | FR-014 | Dataset·rights·split·model·config·environment·execution admission을 독립 Gate로 판단해야 한다. | [구현] |
 | FR-015 | 권리 evidence를 candidate·Manifest·evidence ID·scope에 결합하고 승인된 exact membership만 Dataset으로 등록해야 한다. | Gate [구현], 승인 Dataset [미확보] |
 | FR-016 | archive member를 extract 없이 read-only로 조사하고 path·identity·encryption·nested archive·resource 위험을 차단해야 한다. | ZIP Foundation [구현], 실제 enrollment [차단] |
+| FR-017 | generic archive path 보안을 유지하면서 evidence-bound candidate path를 가역적 logical identity로 해석하고 companion 관계를 path-free로 분류해야 한다. | Policy [구현], ingestion 의미 [검토 필요] |
 
 ## 비기능 요구사항
 
