@@ -54,6 +54,17 @@ Generic raw path 차단은 유지하면서 candidate별 exactly-one-leading-slas
 
 JSON·MIDI representative probe는 candidate당 3개로 제한했습니다. JSON은 schema/key summary만, MIDI는 14-byte SMF header만 관찰했습니다. role은 extension-based `audio_member`·`midi_member`·`json_member`이며 실제 ingestion disposition은 모두 `review_required`입니다.
 
+## Candidate role disposition
+
+Complete group의 구조적 포함과 role의 semantic 사용을 분리했습니다. Partial/orphan은 자동 include 또는 metadata-only로 승인하지 않고 review-required로 유지합니다.
+
+| candidate ID | structural include | review required | blocked | excluded | structural candidate ready | inventory ready |
+|---|---:|---:|---:|---:|---|---|
+| `aihub-098-music-loop-package` | 108,000 | 0 | 0 | 0 | `true` | `false` |
+| `aihub-209-traditional-music-package` | 9,945 | 32 | 0 | 0 | `false` | `false` |
+
+Music의 `inventory_ready=false`는 모든 role의 semantic disposition이 `review_required`이기 때문입니다. Traditional은 16개 MIDI+WAV missing-JSON group과 16개 JSON-only orphan도 unresolved입니다. 원본 membership 29,883개와 group 9,977개를 보존했으며 policy exclusion과 source mutation은 0입니다.
+
 ## Dataset enrollment
 
 | candidate ID | Manifest enrolled | DatasetVersion issued | inventory match | split frozen | blocker |
@@ -75,6 +86,8 @@ JSON·MIDI representative probe는 candidate당 3개로 제한했습니다. JSON
 | `PATH_INTERPRETATION_PASS` | archive 후보 `true` | candidate별 exactly-one-leading-slash evidence와 해석 후 path guard 통과 |
 | `INTERPRETED_PATH_SAFETY_PASS` | archive 후보 `true` | 해석 후 unsafe·collision 0; generic raw 상태와 별도 |
 | `COMPANION_RELATIONSHIP_PASS` | Music loop `true`, Traditional `false` | Traditional에 missing-role partial group 32개 |
+| `STRUCTURAL_CANDIDATE_READY` | Music loop `true`, Traditional `false` | Music은 complete-only, Traditional은 group review 32개 |
+| `ROLE_POLICY_INVENTORY_READY` | 두 candidate `false` | 모든 semantic role이 review-required |
 | `RIGHTS_GATE_PASS` | `false` | 승인 evidence 없음 또는 review/restriction 상태 |
 | `DATASET_INTEGRITY_PASS` | `false` | 승인 membership·현재 content checksum 재검증·지원 형식 정책 미완료 |
 | `DATASET_SPLIT_FROZEN` | `false` | 승인 Dataset Manifest가 없어 split 미발급 |

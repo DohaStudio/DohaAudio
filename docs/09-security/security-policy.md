@@ -29,6 +29,8 @@ Rights evidence adapter에는 sanitized source alias, logical identity, review/e
 
 Archive inspection은 `extract()`·`extractall()`과 filesystem member write를 사용하지 않습니다. member 이름은 traversal·absolute/drive/UNC path·encoded traversal·case-insensitive collision을 검사하고, 외부 결과에는 raw archive/member filename 대신 candidate-bound opaque identity만 둡니다. encrypted·nested·corrupt member와 caller-supplied size·count·ratio ceiling 초과는 fail-closed 합니다.
 
+Role disposition decision은 candidate·path evidence·companion policy exact binding을 요구하고 safe reason code와 opaque group ID만 공개합니다. Partial/orphan을 silent include하지 않으며 policy-level exclusion도 source archive 삭제나 rewrite를 수행하지 않습니다.
+
 Candidate path interpretation은 generic security exception이 아닙니다. candidate·policy identity에 결합된 exactly-one-leading-slash evidence만 별도 logical view로 해석하고 raw unsafe 상태를 보존합니다. interpreted result에는 raw filename 대신 fingerprint·opaque member/group ID만 남기며 mixed/double-leading pattern과 해석 후 traversal·drive·UNC·colon·collision은 차단합니다. Companion probe는 bounded representative JSON key summary와 MIDI header로 제한하고 raw value·binary·filename을 tracked output에 복사하지 않습니다.
 
 Training readiness는 rights/license/eligibility가 불명확하거나 evidence가 누락·미검토·만료된 경우 `BLOCKED`로 fail-closed 합니다. Dataset license, training permission, commercial usage, redistribution, model/weight license를 하나의 boolean으로 합치지 않습니다.

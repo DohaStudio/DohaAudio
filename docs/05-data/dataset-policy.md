@@ -63,6 +63,7 @@ DohaData/audio/
 - encrypted·nested·corrupt·부분 검사와 unsupported member는 숨겨서 제외하지 않으며, 명시적 exclusion 정책이 없으면 candidate enrollment를 차단합니다.
 - candidate path interpretation은 generic inspector와 분리하고 policy ID·version·candidate ID·evidence fingerprint를 결합합니다. raw unsafe 상태를 보존하며 exactly-one-leading-slash 외의 pattern과 해석 후 traversal·drive·UNC·colon·collision을 차단합니다.
 - companion grouping은 해석된 directory-bound stem의 opaque ID와 extension role만 사용합니다. 관계 완전성은 Training 의미나 ingestion 승인을 뜻하지 않으며 role disposition이 `review_required`이면 inventory를 발급하지 않습니다.
+- role disposition policy는 path evidence와 companion policy에 exact binding하고 complete·partial·orphan의 구조적 decision을 semantic role과 분리합니다. Partial exclusion은 source 삭제가 아니며 현재 실제 candidate의 incomplete group과 모든 role은 `review_required`입니다.
 
 ## 관련 결정
 
@@ -71,3 +72,4 @@ DohaData/audio/
 - [ADR-007 Dataset Authority와 Training Admission](../10-decisions/ADR-007-dataset-authority-training-admission.md)
 - [ADR-008 Read-only Archive Membership Inspection](../10-decisions/ADR-008-read-only-archive-membership-inspection.md)
 - [ADR-009 Candidate-specific Archive Path와 Companion Policy](../10-decisions/ADR-009-archive-path-companion-policy.md)
+- [ADR-010 Candidate Role Disposition과 Partial Companion Policy](../10-decisions/ADR-010-candidate-role-disposition-partial-group-policy.md)
