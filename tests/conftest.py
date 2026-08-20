@@ -1,12 +1,23 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from pathlib import Path
+from uuid import uuid4
 
 import pytest
 
 from dohaaudio.bootstrap import AudioRuntime, bootstrap_runtime
 from dohaaudio.contracts import Capability, CreateJobRequest
 from dohaaudio.providers import FAKE_MANIFEST_ID
+
+
+@pytest.fixture
+def database_path() -> Path:
+    root = Path("tmp") / "pytest-sqlite"
+    root.mkdir(parents=True, exist_ok=True)
+    database = root / f"{uuid4().hex}.sqlite3"
+    yield database
+    database.unlink(missing_ok=True)
 
 
 @pytest.fixture

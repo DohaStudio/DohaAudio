@@ -1,25 +1,25 @@
 # DohaAudio
 
 > 문서 상태: [계획]
-> 구현 상태: Runtime Foundation·Provider API·Fake Provider [구현], 실제 모델·Training [미구현]
+> 구현 상태: Runtime·Pre-Training Readiness Foundation [구현], 실제 모델·Training [미구현]
 > 저장소: `DohaStudio/DohaAudio`
 > 공통 명세: `0.1.0` / `draft-baseline`
 > 명세 기준: `DohaStudio/.github` `main` (`1e4b480c8cbd6e51835f8550e685e9b136d8071d`)
 
 DohaAudio는 DohaMusic을 위한 음악 생성 및 일반 Audio AI Provider 프로젝트입니다. Music Generation뿐 아니라 Instrumental Generation, Stem Separation, Music Analysis, Dataset Pipeline, Training, Fine-tuning, Evaluation, Model Manifest와 독립 Runtime을 담당할 계획입니다.
 
-현재 저장소에는 학습 전 Provider Runtime Foundation이 구현되어 있습니다. In-memory Job·Artifact·Model Manifest registry와 deterministic Fake Provider로 계약을 검증하며 Dataset, 실제 모델, Checkpoint와 생성 음원은 포함하지 않습니다.
+현재 저장소에는 Provider Runtime과 Pre-Training Readiness Foundation이 구현되어 있습니다. 교체 가능한 in-memory/SQLite Job repository, 단일 Job worker boundary, Dataset Manifest·권리 Gate와 read-only training dry-run을 deterministic fixture로 검증합니다. 실제 Dataset, 모델, Checkpoint와 생성 음원은 포함하지 않습니다.
 
 ## 책임
 
 - Music Generation과 Instrumental Generation [계획]
 - Stem Separation [계획]
 - BPM·Key·Music Structure·Audio Quality Analysis [계획]
-- Music Dataset Pipeline [계획]
-- Training·Fine-tuning·Evaluation [계획]
+- Dataset Manifest·split·integrity·권리 Gate [구현], 실제 Dataset Pipeline [미구현]
+- Training 계약·preflight·dry-run [구현], 실제 Training·Fine-tuning·Evaluation [미구현]
 - Checkpoint·공통 Model Registry [계획], Provider-local Model Manifest registry [구현]
 - Runtime Foundation과 Provider API [구현]
-- 실제 모델 Adapter와 worker·영속 DB [미구현]
+- Worker execution boundary와 SQLite Job persistence [구현], 실제 모델 Adapter [미구현]
 
 ## 비목표
 
@@ -93,7 +93,9 @@ flowchart LR
 
 ## 개발 상태
 
-Runtime Foundation과 Provider API는 deterministic Fake Provider 기준으로 구현했습니다. `MusicGenerationJob`, `StemSeparationJob`, `AudioAnalysisJob`의 독립 lifecycle, idempotency, 취소, 새 Job 재시도, Artifact와 Manifest 불변성을 실제 모델 없이 검증합니다.
+Runtime Foundation과 Provider API는 deterministic Fake Provider 기준으로 구현했습니다. `MusicGenerationJob`, `StemSeparationJob`, `AudioAnalysisJob`의 독립 lifecycle, restart 이후 idempotency, atomic worker claim, 취소, 재시도와 stale-running 복구를 실제 모델 없이 검증합니다.
+
+Pre-Training Readiness는 공통 Dataset Manifest 의미 계약에 맞춘 불변 DatasetVersion, deterministic split, checksum·provenance 무결성, fail-closed rights evidence와 training eligibility, TrainingRun/config snapshot, model compatibility preflight와 read-only dry-run을 제공합니다. `PRE_TRAINING_READY`는 이 계약 fixture가 Training 시작 직전 Gate를 통과한다는 의미이며 법률 승인, 실제 Dataset 승인, GPU 검증 또는 Training 실행을 뜻하지 않습니다.
 
 ```powershell
 python -m pip install -e ".[dev,runtime]"
@@ -101,7 +103,9 @@ python -m uvicorn dohaaudio.api:app --app-dir src
 python -m pytest
 ```
 
-API는 DohaMusic 목표 계약의 `/api/v1/providers/audio` namespace를 사용합니다. `CreateJob`은 `queued` Job만 생성하며 이 Foundation에는 자동 worker가 없습니다. Fake E2E에서는 application service의 `run_job`을 명시적으로 호출합니다. 실제 Dataset·모델·Checkpoint·GPU·성능·VRAM·라이선스와 DohaMusic network 통합은 여전히 `[미구현]` 또는 `[검증 필요]`입니다.
+API는 DohaMusic 목표 계약의 `/api/v1/providers/audio` namespace를 사용합니다. `CreateJob`은 `queued` Job만 생성하며 embedding host가 `ExecutionWorker.run_once()`를 호출합니다. Background daemon과 새 Training HTTP API는 추가하지 않았습니다. 실제 Dataset·모델·Checkpoint·optimizer·GPU·성능·VRAM·법률 승인과 DohaMusic network 통합은 여전히 `[미구현]` 또는 `[검증 필요]`입니다.
+
+SQLite persistence는 `bootstrap_persistent_runtime(database_path)`로 논리 위치를 주입하며 한 개 `jobs` aggregate table을 schema bootstrap합니다. DB 경로는 API에 노출하지 않고 테스트는 Git 제외 temporary DB만 사용합니다.
 
 ## 기여와 라이선스
 

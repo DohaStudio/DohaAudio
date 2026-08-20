@@ -4,6 +4,14 @@
 
 ### 추가
 
+- SQLite 기반 영속 Job repository와 process restart 이후 idempotency·retry lineage 보존
+- atomic worker claim·lease, cancellation 관찰, structured failure와 stale-running fail-safe recovery
+- 내부 storage reference를 API와 분리하는 `ArtifactResolver` boundary
+- Dataset Manifest JSON schema, 불변 DatasetVersion, deterministic split와 integrity validator
+- 권리 evidence·expiry·license·training eligibility fail-closed Gate
+- immutable TrainingRun·TrainingConfig, preflight readiness와 side-effect-free dry-run
+- future Evaluation metadata와 Dataset → TrainingRun → Checkpoint → Evaluation → Model Manifest lineage 계약
+
 - FastAPI 기반 DohaAudio Provider API와 Runtime bootstrap
 - `MusicGenerationJob`, `StemSeparationJob`, `AudioAnalysisJob` 공통 상태·진행률·취소·새 Job 재시도 계약
 - canonical request fingerprint 기반 idempotency replay와 conflict 방지
@@ -24,6 +32,6 @@
 ### 미구현
 
 - Music Generator, Stem Separation, Music Analysis
-- Dataset Migration, Training, Evaluation
-- 실제 모델 Adapter·Checkpoint·GPU worker와 영속 DB
+- 실제 Dataset Migration·decode와 Training·Evaluation 실행
+- 실제 모델 Adapter·Checkpoint·GPU worker와 production DB
 - DohaMusic Provider Client와 실제 network 통합

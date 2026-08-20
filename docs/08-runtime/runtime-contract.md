@@ -2,7 +2,8 @@
 
 > 문서 상태: [구현]
 > Fake Runtime·HTTP API: [구현]
-> 실제 모델 worker·영속 persistence: [미구현]
+> SQLite Job persistence·Worker execution boundary: [구현]
+> 실제 모델 worker·background daemon: [미구현]
 
 DohaAudio Runtime Foundation은 capability 작업의 계약을 실행하는 독립 Provider Runtime입니다. 현재 `FakeAudioProvider`만 등록되며 실제 모델을 load하거나 외부 Provider를 호출하지 않습니다. DohaMusic만 외부 Orchestrator로서 Runtime을 호출하는 경계를 유지합니다.
 
@@ -30,7 +31,11 @@ queued → cancelled
 
 종료 상태는 불변입니다. Retry는 원본 상태와 오류를 보존한 채 새 `job_id`, `retry_of_job_id`와 증가한 `attempt`를 갖습니다. 동일 idempotency key와 동일 canonical request는 기존 Job을 replay하고 요청이 다르면 conflict로 거부해 부분 Job을 만들지 않습니다.
 
-`CreateJob`은 `queued` 상태를 반환합니다. 이 Foundation에는 worker·queue가 없으므로 자동 실행하지 않으며 embedding code와 test가 `AudioRuntime.run_job(job_id)`를 명시적으로 호출합니다. Fake Runtime의 queued·running 취소는 즉시 최종 `cancelled`로 처리합니다. `progress_percent=100`은 Artifact 등록 전까지 `running`일 수 있습니다.
+`CreateJob`은 `queued` 상태를 반환합니다. Embedding host가 `ExecutionWorker.run_once()`를 호출하면 repository가 가장 오래된 queued Job을 atomic claim하고 `running`으로 전이한 뒤 Fake Provider를 실행합니다. 동시 claim은 하나만 성공하며 실행 전후 cancellation을 관찰합니다. `progress_percent=100`은 Artifact batch 등록 전까지 `running`일 수 있습니다.
+
+`SQLiteJobRepository`는 주입된 local DB 위치에 단일 `jobs` aggregate table과 claim/retry index를 schema bootstrap합니다. Job·idempotency·retry lineage와 claim/recovery metadata는 process reopen 후에도 유지됩니다. 유효한 claim token의 heartbeat만 lease를 갱신할 수 있습니다. DB 경로와 claim token, worker ID, lease·heartbeat는 외부 Job 응답에 포함하지 않습니다.
+
+Queued Job은 restart 뒤 다시 claim할 수 있습니다. lease가 만료된 running Job은 Provider side effect 중복을 막기 위해 자동 queued 복귀나 성공 처리하지 않고 retryable `failed`로 복구합니다. 새 실행은 명시적 Retry가 새 Job ID로 생성합니다.
 
 ## HTTP API
 
@@ -50,7 +55,7 @@ queued → cancelled
 
 ## 현재 범위 밖
 
-GPU admission control, 여러 Provider 실행 순서, Workspace Selection과 최종 AssetVersion 등록은 DohaMusic 책임입니다. 실제 모델 load/unload, Dataset, Checkpoint, 영속 DB, 분산 queue, 인증, 배포와 network DohaMusic 통합은 구현하지 않았습니다.
+GPU admission control, 여러 Provider 실행 순서, Workspace Selection과 최종 AssetVersion 등록은 DohaMusic 책임입니다. 실제 모델 load/unload, Dataset payload, Checkpoint, production DB, 분산 queue, background daemon, 인증, 배포와 network DohaMusic 통합은 구현하지 않았습니다.
 
 ## 관련 결정
 

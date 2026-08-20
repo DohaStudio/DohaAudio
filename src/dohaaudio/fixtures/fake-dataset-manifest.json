@@ -1,0 +1,41 @@
+{
+  "dataset_manifest_id": "dataset-manifest/audio/fake-readiness/v1",
+  "dataset_id": "dataset/audio/fake-readiness",
+  "dataset_version": "1.0.0",
+  "dataset_domain": "audio",
+  "source": "fixture/synthetic-metadata-only",
+  "license_status": "approved",
+  "training_allowed": "true",
+  "commercial_usage_status": "commercial_review_pending",
+  "redistribution_allowed": "pending_review",
+  "item_count": 3,
+  "manifest_checksum": "2a3c1e28af3e1db450897878a2183e9736e37b6c2ba76106d0c29231d081bab4",
+  "content_checksum_set_id": "checksum-set-fake-readiness-v1",
+  "split_id": "split-fake-readiness-v1",
+  "created_at": "2026-08-19T00:00:00Z",
+  "supersedes_dataset_version": null,
+  "deletion_status": "active",
+  "entries": [
+    {"sample_id": "sample-001", "content_checksum": "1111111111111111111111111111111111111111111111111111111111111111", "media_type": "audio/wav", "provenance": "fixture/source-a"},
+    {"sample_id": "sample-002", "content_checksum": "2222222222222222222222222222222222222222222222222222222222222222", "media_type": "audio/flac", "provenance": "fixture/source-b"},
+    {"sample_id": "sample-003", "content_checksum": "3333333333333333333333333333333333333333333333333333333333333333", "media_type": "audio/mpeg", "provenance": "fixture/source-c"}
+  ],
+  "split": {
+    "split_id": "split-fake-readiness-v1",
+    "train": ["sample-001"],
+    "validation": ["sample-002"],
+    "test": ["sample-003"],
+    "algorithm_version": "fixture-split-v1",
+    "seed": 17
+  },
+  "rights_evidence": [
+    {
+      "source": "fixture/synthetic-review",
+      "evidence_id": "evidence-fake-readiness-v1",
+      "review_status": "verified",
+      "effective_at": "2026-08-18T00:00:00Z",
+      "expires_at": "2026-09-18T00:00:00Z"
+    }
+  ],
+  "normalization_settings": {"profile": "fixture-only-v1"}
+}

@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.dohastudio.org/dohaaudio/dataset-manifest-v1.schema.json",
+  "title": "DohaAudio Dataset Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "dataset_manifest_id", "dataset_id", "dataset_version", "dataset_domain", "source",
+    "license_status", "training_allowed", "commercial_usage_status", "redistribution_allowed",
+    "item_count", "manifest_checksum", "content_checksum_set_id", "split_id", "created_at",
+    "supersedes_dataset_version", "deletion_status", "entries", "split", "rights_evidence",
+    "normalization_settings"
+  ],
+  "properties": {
+    "dataset_manifest_id": {"type": "string", "minLength": 1},
+    "dataset_id": {"type": "string", "minLength": 1},
+    "dataset_version": {"type": "string", "minLength": 1},
+    "dataset_domain": {"const": "audio"},
+    "source": {"type": "string", "minLength": 1},
+    "license_status": {"enum": ["approved", "review_required", "unknown", "rejected"]},
+    "training_allowed": {"enum": ["true", "false", "pending_review"]},
+    "commercial_usage_status": {"enum": ["research_only", "commercial_review_pending", "commercial_approved", "commercial_rejected"]},
+    "redistribution_allowed": {"enum": ["true", "false", "pending_review"]},
+    "item_count": {"type": "integer", "minimum": 0},
+    "manifest_checksum": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "content_checksum_set_id": {"type": "string", "minLength": 1},
+    "split_id": {"type": "string", "minLength": 1},
+    "created_at": {"type": "string", "format": "date-time"},
+    "supersedes_dataset_version": {"type": ["string", "null"]},
+    "deletion_status": {"enum": ["active", "withdrawn", "deleted"]},
+    "entries": {"type": "array", "items": {"$ref": "#/$defs/entry"}},
+    "split": {"$ref": "#/$defs/split"},
+    "rights_evidence": {"type": "array", "items": {"$ref": "#/$defs/evidence"}},
+    "normalization_settings": {"type": "object", "additionalProperties": {"type": "string"}}
+  },
+  "$defs": {
+    "entry": {
+      "type": "object", "additionalProperties": false,
+      "required": ["sample_id", "content_checksum", "media_type", "provenance"],
+      "properties": {
+        "sample_id": {"type": "string", "minLength": 1},
+        "content_checksum": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "media_type": {"enum": ["audio/wav", "audio/flac", "audio/mpeg"]},
+        "provenance": {"type": "string", "minLength": 1}
+      }
+    },
+    "split": {
+      "type": "object", "additionalProperties": false,
+      "required": ["split_id", "train", "validation", "test", "algorithm_version", "seed"],
+      "properties": {
+        "split_id": {"type": "string", "minLength": 1},
+        "train": {"type": "array", "items": {"type": "string"}},
+        "validation": {"type": "array", "items": {"type": "string"}},
+        "test": {"type": "array", "items": {"type": "string"}},
+        "algorithm_version": {"type": "string", "minLength": 1},
+        "seed": {"type": "integer"}
+      }
+    },
+    "evidence": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source", "evidence_id", "review_status", "effective_at", "expires_at"],
+      "properties": {
+        "source": {"type": "string", "minLength": 1},
+        "evidence_id": {"type": "string", "minLength": 1},
+        "review_status": {"enum": ["verified", "review_required", "rejected"]},
+        "effective_at": {"type": "string", "format": "date-time"},
+        "expires_at": {"type": ["string", "null"], "format": "date-time"}
+      }
+    }
+  }
+}

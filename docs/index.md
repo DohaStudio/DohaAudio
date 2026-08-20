@@ -9,9 +9,9 @@
 | Requirements | [요구사항](02-requirements/requirements.md) | [계획] |
 | Architecture | [Provider Architecture](03-architecture/provider-architecture.md) | [구현] |
 | Models | [Model Manifest](04-models/model-manifest.md) | [구현] |
-| Data | [Dataset 정책](05-data/dataset-policy.md) | [계획] |
-| Training | [Training 전략](06-training/training-strategy.md) | [계획] |
-| Evaluation | [Evaluation 전략](07-evaluation/evaluation-strategy.md) | [계획] |
+| Data | [Dataset 정책](05-data/dataset-policy.md) | 계약·검증 [구현], 실제 Dataset [미구현] |
+| Training | [Training 전략](06-training/training-strategy.md) | preflight·dry-run [구현], 실제 Training [미구현] |
+| Evaluation | [Evaluation 전략](07-evaluation/evaluation-strategy.md) | metadata 계약 [구현], 실행 [미구현] |
 | Runtime | [Runtime 계약](08-runtime/runtime-contract.md) | [구현] |
 | Security | [보안 정책](09-security/security-policy.md) | [부분 구현] |
 | Decisions | [ADR 인덱스](10-decisions/README.md) | [계획] |

@@ -86,7 +86,20 @@ def test_absolute_path_and_secret_settings_are_rejected(
     assert secret_error.value.error_code == "UNSAFE_REQUEST_METADATA"
 
 
-@pytest.mark.parametrize("key", ["access_token", "client_secret", "api-key", "db.password"])
+@pytest.mark.parametrize(
+    "key",
+    [
+        "api-key",
+        "apikey",
+        "token",
+        "access_token",
+        "secret",
+        "client_secret",
+        "credential",
+        "password",
+        "db.password",
+    ],
+)
 def test_secret_setting_key_variants_are_rejected(
     runtime: AudioRuntime,
     make_request: Callable[..., CreateJobRequest],
@@ -95,6 +108,19 @@ def test_secret_setting_key_variants_are_rejected(
     with pytest.raises(ContractError) as exc_info:
         runtime.create_job(make_request(settings_snapshot={key: "test-only-value"}))
     assert exc_info.value.error_code == "UNSAFE_REQUEST_METADATA"
+
+
+def test_non_secret_metadata_with_similar_words_is_allowed(
+    runtime: AudioRuntime, make_request: Callable[..., CreateJobRequest]
+) -> None:
+    created = runtime.create_job(
+        make_request(
+            job_id="job-safe-metadata",
+            idempotency_key="idem-safe-metadata",
+            settings_snapshot={"token_count": 128, "password_policy_version": "fixture-v1"},
+        )
+    )
+    assert created.job_id == "job-safe-metadata"
 
 
 def test_file_uri_is_rejected(
