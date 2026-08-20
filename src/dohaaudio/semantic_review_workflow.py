@@ -17,6 +17,10 @@ from dohaaudio.archive_policy import CompanionRole
 from dohaaudio.archive_role_policy import CandidateRoleDispositionPolicy
 from dohaaudio.contracts import FrozenModel
 from dohaaudio.errors import ConflictError, ContractError, NotFoundError
+from dohaaudio.reviewer_identity import (
+    AuthenticatedReviewerResolver,
+    VerifiedAuthenticationContext,
+)
 from dohaaudio.security import assert_safe_metadata
 from dohaaudio.semantic_role_evidence import (
     HumanReviewOutcome,
@@ -448,7 +452,7 @@ class HumanSemanticReviewDecisionRegistry:
 
 
 class HumanSemanticReviewWorkflow:
-    """Domain authorization workflow; caller authentication remains external."""
+    """Semantic workflow with an optional authenticated reviewer boundary."""
 
     def __init__(
         self,
@@ -456,11 +460,13 @@ class HumanSemanticReviewWorkflow:
         authority_registry: ReviewerAuthorityRegistry,
         request_registry: SemanticReviewRequestRegistry,
         decision_registry: HumanSemanticReviewDecisionRegistry,
+        reviewer_resolver: AuthenticatedReviewerResolver | None = None,
     ) -> None:
         self._evidence = evidence_registry
         self._authorities = authority_registry
         self._requests = request_registry
         self._decisions = decision_registry
+        self._reviewer_resolver = reviewer_resolver
 
     def create_request(
         self,
@@ -533,6 +539,76 @@ class HumanSemanticReviewWorkflow:
         )
 
     def submit_decision(
+        self,
+        request_id: str,
+        *,
+        authority_id: str,
+        authority_version: str,
+        reviewer_id: str,
+        outcome: HumanReviewOutcome,
+        reason_code: str,
+        decided_at: datetime,
+        current_evidence: SemanticRoleEvidence,
+        current_evidence_policy: SemanticRoleEvidencePolicy,
+        current_role_policy: CandidateRoleDispositionPolicy,
+    ) -> HumanSemanticReviewDecision:
+        if self._reviewer_resolver is not None:
+            raise ContractError(
+                "REVIEWER_AUTHENTICATION_REQUIRED",
+                "Authenticated review workflow requires a provider-issued context.",
+            )
+        return self._submit_decision(
+            request_id,
+            authority_id=authority_id,
+            authority_version=authority_version,
+            reviewer_id=reviewer_id,
+            outcome=outcome,
+            reason_code=reason_code,
+            decided_at=decided_at,
+            current_evidence=current_evidence,
+            current_evidence_policy=current_evidence_policy,
+            current_role_policy=current_role_policy,
+        )
+
+    def submit_authenticated_decision(
+        self,
+        request_id: str,
+        *,
+        authentication: VerifiedAuthenticationContext,
+        authority_id: str,
+        authority_version: str,
+        outcome: HumanReviewOutcome,
+        reason_code: str,
+        decided_at: datetime,
+        current_evidence: SemanticRoleEvidence,
+        current_evidence_policy: SemanticRoleEvidencePolicy,
+        current_role_policy: CandidateRoleDispositionPolicy,
+        claimed_reviewer_id: str | None = None,
+    ) -> HumanSemanticReviewDecision:
+        if self._reviewer_resolver is None:
+            raise ContractError(
+                "REVIEWER_AUTHENTICATION_NOT_CONFIGURED",
+                "Authenticated review requires an explicitly configured reviewer resolver.",
+            )
+        reviewer_id = self._reviewer_resolver.resolve(
+            authentication,
+            at=decided_at,
+            claimed_reviewer_id=claimed_reviewer_id,
+        )
+        return self._submit_decision(
+            request_id,
+            authority_id=authority_id,
+            authority_version=authority_version,
+            reviewer_id=reviewer_id,
+            outcome=outcome,
+            reason_code=reason_code,
+            decided_at=decided_at,
+            current_evidence=current_evidence,
+            current_evidence_policy=current_evidence_policy,
+            current_role_policy=current_role_policy,
+        )
+
+    def _submit_decision(
         self,
         request_id: str,
         *,
@@ -619,6 +695,8 @@ class HumanSemanticReviewWorkflow:
         self._validate_request_current(
             request, current_evidence, current_evidence_policy, current_role_policy
         )
+        if self._reviewer_resolver is not None:
+            self._reviewer_resolver.require_reviewer_current(decision.reviewer_id, at=consumed_at)
         action = (
             ReviewerAction.APPROVE
             if decision.status == HumanReviewOutcome.APPROVED

@@ -1,13 +1,14 @@
 # 보안 정책
 
-Reviewer authority의 public audit identity는 opaque logical ID만 허용합니다. 실제 이메일·account profile·private note는 tracked contract에 저장하지 않으며 authentication mapping은 private integration boundary에 둡니다. Expired·revoked·wrong-scope authority와 forged request/decision identity는 fail-closed합니다.
+Reviewer authority의 public audit identity는 opaque logical ID만 허용합니다. 실제 이메일·account profile·private note는 tracked contract에 저장하지 않으며 authentication mapping은 private integration boundary에 둡니다. Provider-issued verification context만 trusted authentication으로 인정하고 deserialized principal, expired·future authentication, mapping/authority expiry·revocation·scope mismatch와 forged request/decision identity는 fail-closed합니다.
 
-> 문서 상태: Runtime 요청·응답 보호 [구현], 운영 인증·권한 [계획]
+> 문서 상태: Runtime 요청·응답 보호·reviewer authentication boundary [구현], 실제 provider·운영 권한 [계획]
 
 ## 저장소 보호
 
 - Dataset, 음원, 모델 weight, Checkpoint와 Runtime Artifact를 Git에 포함하지 않습니다.
 - `.env`와 token, credential, 실제 내부 경로를 커밋하지 않습니다.
+- OAuth client secret, access/refresh/ID token, password, JWT signing key, raw provider assertion과 session secret을 domain record·registry·log에 저장하지 않습니다.
 - 공개 Manifest와 log에서 사용자 식별자, 원본 파일명과 절대 경로를 제거합니다.
 - 의존성·모델·Dataset 출처와 checksum을 검증합니다.
 
@@ -38,3 +39,5 @@ Candidate path interpretation은 generic security exception이 아닙니다. can
 Semantic role evidence는 filesystem enumeration 순서가 아닌 opaque archive/member identity로 deterministic sample을 선택합니다. JSON은 caller ceiling 내에서 parse한 뒤 schema fingerprint와 고정된 key category count만 남기고 raw value·key·문서를 폐기합니다. MIDI는 14-byte SMF header distribution만 남기며 raw byte와 note sequence를 보존하지 않습니다. WAV content probe와 decode는 수행하지 않습니다. Evidence fingerprint는 candidate membership과 path·companion·role policy identity에 결합되고, human approval은 policy에 등록된 reviewer authority와 exact evidence identity가 모두 일치해야 합니다.
 
 Training readiness는 rights/license/eligibility가 불명확하거나 evidence가 누락·미검토·만료된 경우 `BLOCKED`로 fail-closed 합니다. Dataset license, training permission, commercial usage, redistribution, model/weight license를 하나의 boolean으로 합치지 않습니다.
+
+Reviewer authentication은 provider-independent protocol 뒤에 둡니다. Sanitized principal은 private subject reference만 포함하고 provider가 발급·보관한 verification context를 매 호출마다 재검증합니다. Private mapping registry와 public ReviewerAuthority registry는 분리하며 semantic decision에는 subject·session·issuer·assurance를 복사하지 않습니다. Fake provider는 test-only이고 실제 account authentication을 주장하지 않습니다.

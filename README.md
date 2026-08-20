@@ -1,21 +1,21 @@
 # DohaAudio
 
 > 문서 상태: [계획]
-> 구현 상태: Runtime·Pre-Training Readiness·Dataset Admission·Enrollment·Archive Inspection·Path Interpretation·Role Disposition·Semantic Evidence Review·Human Review Workflow [구현], 실제 reviewer 인증·승인 Dataset·실제 모델·Training [미구현]
+> 구현 상태: Runtime·Pre-Training Readiness·Dataset Admission·Enrollment·Archive Inspection·Path Interpretation·Role Disposition·Semantic Evidence Review·Human Review Workflow·Reviewer Authentication Boundary [구현], 실제 OAuth/OIDC·reviewer 등록·승인 Dataset·실제 모델·Training [미구현]
 > 저장소: `DohaStudio/DohaAudio`
 > 공통 명세: `0.1.0` / `draft-baseline`
 > 명세 기준: `DohaStudio/.github` `main` (`1e4b480c8cbd6e51835f8550e685e9b136d8071d`)
 
 DohaAudio는 DohaMusic을 위한 음악 생성 및 일반 Audio AI Provider 프로젝트입니다. Music Generation뿐 아니라 Instrumental Generation, Stem Separation, Music Analysis, Dataset Pipeline, Training, Fine-tuning, Evaluation, Model Manifest와 독립 Runtime을 담당할 계획입니다.
 
-현재 저장소에는 Provider Runtime, Pre-Training Readiness와 Dataset Admission·Enrollment·Archive Membership Inspection·Path Interpretation·Role Disposition·Semantic Evidence Review·Human Review Workflow Gate가 구현되어 있습니다. 교체 가능한 in-memory/SQLite Job repository, 단일 Job worker boundary, Dataset Manifest·권리 Gate, 주입식 read-only authority resolver, normalized rights evidence, ZIP central-directory inspection, candidate-bound path·companion·role policy, bounded schema/header evidence, versioned reviewer authority와 training dry-run을 검증합니다. 실제 reviewer authentication, Dataset, 모델, Checkpoint와 생성 음원은 포함하지 않습니다.
+현재 저장소에는 Provider Runtime, Pre-Training Readiness와 Dataset Admission·Enrollment·Archive Membership Inspection·Path Interpretation·Role Disposition·Semantic Evidence Review·Human Review Workflow·Authenticated Reviewer Identity Gate가 구현되어 있습니다. 교체 가능한 in-memory/SQLite Job repository, 단일 Job worker boundary, Dataset Manifest·권리 Gate, 주입식 read-only authority resolver, normalized rights evidence, ZIP central-directory inspection, candidate-bound path·companion·role policy, bounded schema/header evidence, versioned reviewer authority, provider-independent authentication과 private identity mapping 경계, training dry-run을 검증합니다. 실제 OAuth/OIDC provider, 실제 identity mapping·reviewer authority, Dataset, 모델, Checkpoint와 생성 음원은 포함하지 않습니다.
 
 ## 책임
 
 - Music Generation과 Instrumental Generation [계획]
 - Stem Separation [계획]
 - BPM·Key·Music Structure·Audio Quality Analysis [계획]
-- Dataset Manifest·split·integrity·권리 Gate, authority inventory, read-only ZIP membership inspection, candidate path·companion·role disposition, semantic evidence와 human review governance [구현], 실제 reviewer authentication·Dataset Pipeline [미구현]
+- Dataset Manifest·split·integrity·권리 Gate, authority inventory, read-only ZIP membership inspection, candidate path·companion·role disposition, semantic evidence와 human review governance·authentication boundary [구현], 실제 provider 연동·reviewer 등록·Dataset Pipeline [미구현]
 - Training 계약·preflight·dry-run [구현], 실제 Training·Fine-tuning·Evaluation [미구현]
 - Checkpoint·공통 Model Registry [계획], Provider-local Model Manifest registry [구현]
 - Runtime Foundation과 Provider API [구현]
@@ -91,6 +91,7 @@ flowchart LR
 - [Archive Role Disposition과 Partial Group Policy](docs/05-data/archive-role-disposition-policy.md)
 - [Semantic Role Evidence Review](docs/05-data/semantic-role-evidence-review.md)
 - [Reviewer Authority와 Human Semantic Review Workflow](docs/05-data/human-semantic-review-workflow.md)
+- [Authenticated Reviewer Identity Boundary](docs/09-security/authenticated-reviewer-identity.md)
 - [Training 전략](docs/06-training/training-strategy.md)
 - [Evaluation 전략](docs/07-evaluation/evaluation-strategy.md)
 - [Runtime 계약](docs/08-runtime/runtime-contract.md)
@@ -113,7 +114,9 @@ Role Disposition Policy는 complete group의 구조적 포함과 JSON·MIDI·WAV
 
 Semantic Role Evidence Review Foundation은 candidate membership과 path·companion·role policy에 결합된 deterministic archive-coverage sampling을 제공합니다. JSON은 caller-bounded document에서 raw value를 제거한 schema shape만, MIDI는 14-byte SMF header만 집계하며 WAV는 content probe·decode를 수행하지 않습니다. Evidence와 human decision을 분리하고 등록된 reviewer authority가 없으면 자동 분석 결과를 항상 `review_required`로 유지합니다. 실제 두 candidate의 semantic role과 `inventory_ready`는 변경되지 않았습니다.
 
-Human Semantic Review Workflow Foundation은 versioned reviewer authority, exact scope, effective·expiry·revocation, immutable review request·decision·supersession과 소비 시 current-evidence 재검증을 제공합니다. 이 registry는 domain authorization 계약이며 실제 계정 authentication은 구현하지 않았습니다. Repository에는 synthetic test authority만 있고 실제 candidate approval은 0개입니다.
+Human Semantic Review Workflow Foundation은 versioned reviewer authority, exact scope, effective·expiry·revocation, immutable review request·decision·supersession과 소비 시 current-evidence 재검증을 제공합니다. 이 registry 자체는 domain authorization 계약이고 별도 authentication boundary를 우회하지 않습니다. Repository에는 synthetic test authority만 있고 실제 candidate approval은 0개입니다.
+
+Authenticated Reviewer Identity Foundation은 provider-independent verification protocol, immutable sanitized principal, provider-issued verification context, private versioned principal→opaque reviewer mapping과 workflow guard를 제공합니다. 인증이 설정된 workflow는 caller-supplied reviewer ID를 신뢰하지 않고 현재 authentication·mapping·ReviewerAuthority를 순서대로 검증합니다. `FakeAuthenticationProvider`는 synthetic test 전용이며 실제 OAuth/OIDC, real identity mapping과 real reviewer authority는 모두 0이므로 production human approval은 계속 비활성화되어 있습니다.
 
 ```powershell
 python -m pip install -e ".[dev,runtime]"

@@ -26,7 +26,8 @@
 | FR-017 | generic archive path 보안을 유지하면서 evidence-bound candidate path를 가역적 logical identity로 해석하고 companion 관계를 path-free로 분류해야 한다. | Policy [구현], ingestion 의미 [검토 필요] |
 | FR-018 | candidate-bound role policy가 complete·partial·orphan group의 구조적 disposition과 role semantic review를 분리하고 deterministic reason으로 fail-closed해야 한다. | Policy [구현], 실제 semantic 승인 [검토 필요] |
 | FR-019 | human semantic review가 versioned reviewer authority, exact scope, immutable request·decision lineage와 expiry·revocation·stale evidence 재검증을 거쳐야 한다. | Governance Foundation [구현], 실제 authentication·reviewer 등록 [미구현] |
-| FR-019 | candidate-bound bounded sampling으로 JSON schema·MIDI header evidence를 sanitized하게 수집하고 automated analysis와 human semantic approval을 분리해야 한다. | Foundation [구현], 실제 semantic 승인 [검토 필요] |
+| FR-020 | candidate-bound bounded sampling으로 JSON schema·MIDI header evidence를 sanitized하게 수집하고 automated analysis와 human semantic approval을 분리해야 한다. | Foundation [구현], 실제 semantic 승인 [검토 필요] |
+| FR-021 | trusted provider verification, private principal→opaque reviewer mapping과 기존 ReviewerAuthority를 순서대로 검증하고 인증만으로 reviewer를 자동 등록하지 않아야 한다. | Authentication Foundation [구현], 실제 provider·mapping·authority [미구현] |
 
 ## 비기능 요구사항
 
@@ -35,3 +36,4 @@
 - 특정 모델에 종속되지 않는 Adapter 경계를 둡니다.
 - 오류를 성공으로 변환하지 않고 구조화된 오류로 반환합니다.
 - 로그에는 비밀정보, 원본 Dataset 내용과 절대 경로를 노출하지 않습니다.
+- 인증 결과·semantic decision에는 access/refresh/ID token, raw assertion, provider subject와 session secret을 저장하지 않습니다.

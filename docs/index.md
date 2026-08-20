@@ -13,7 +13,7 @@
 | Training | [Training 전략](06-training/training-strategy.md) | preflight·dry-run [구현], 실제 Training [미구현] |
 | Evaluation | [Evaluation 전략](07-evaluation/evaluation-strategy.md) | metadata 계약 [구현], 실행 [미구현] |
 | Runtime | [Runtime 계약](08-runtime/runtime-contract.md) | [구현] |
-| Security | [보안 정책](09-security/security-policy.md) | [부분 구현] |
+| Security | [보안 정책](09-security/security-policy.md) · [Authenticated Reviewer Identity](09-security/authenticated-reviewer-identity.md) | authentication boundary [구현], 실제 provider·identity provisioning [미구현] |
 | Decisions | [ADR 인덱스](10-decisions/README.md) | [계획] |
 
 상위 문서는 [README](../README.md), [Roadmap](../ROADMAP.md), [변경 이력](../CHANGELOG.md)에서 확인합니다.
