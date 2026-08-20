@@ -5,7 +5,7 @@
 | Phase | 목표 | 상태 | 주요 산출물 |
 |---|---|---|---|
 | 1 | Repository Foundation | [계획] | 문서 체계, 작업 규칙, 기본 계약 |
-| 2 | Dataset Strategy | [진행 중] | Manifest·Version·split·integrity·rights·authority admission [구현], 승인 Dataset [미확보] |
+| 2 | Dataset Strategy | [진행 중] | Manifest·Version·split·integrity·rights evidence·authority/enrollment Gate [구현], 승인 Dataset 0개 |
 | 3 | Training | [진행 중] | Run/config·preflight·dry-run [구현], optimizer 실행 [미구현] |
 | 4 | Music Generation | [계획] | 교체 가능한 Music Generator와 Instrumental 기능 |
 | 5 | Stem Separation | [계획] | Stem 모델 Adapter와 출력 계약 |

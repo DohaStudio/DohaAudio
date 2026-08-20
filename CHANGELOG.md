@@ -8,6 +8,9 @@
 - root escape·symlink/junction·unsupported format·checksum·duplicate 차단 계약
 - Dataset·rights·split·model·config·environment·execution Gate를 분리한 Training Admission report
 - 실제 후보 세 scope의 sanitized inventory와 fail-closed admission 근거
+- 공급자 원문과 분리된 normalized rights evidence adapter와 scope별 권리 결정
+- exact inventory·evidence 조건을 모두 통과할 때만 Manifest·DatasetVersion·Split을 등록하는 enrollment Gate
+- 실제 후보 세 scope의 권리 재검토 결과와 Manifest·Version·Split 미발급 상태
 
 - SQLite 기반 영속 Job repository와 process restart 이후 idempotency·retry lineage 보존
 - atomic worker claim·lease, cancellation 관찰, structured failure와 stale-running fail-safe recovery

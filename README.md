@@ -1,14 +1,14 @@
 # DohaAudio
 
 > 문서 상태: [계획]
-> 구현 상태: Runtime·Pre-Training Readiness·Dataset Admission Foundation [구현], 실제 모델·Training [미구현]
+> 구현 상태: Runtime·Pre-Training Readiness·Dataset Admission·Enrollment Gate [구현], 승인 Dataset·실제 모델·Training [미구현]
 > 저장소: `DohaStudio/DohaAudio`
 > 공통 명세: `0.1.0` / `draft-baseline`
 > 명세 기준: `DohaStudio/.github` `main` (`1e4b480c8cbd6e51835f8550e685e9b136d8071d`)
 
 DohaAudio는 DohaMusic을 위한 음악 생성 및 일반 Audio AI Provider 프로젝트입니다. Music Generation뿐 아니라 Instrumental Generation, Stem Separation, Music Analysis, Dataset Pipeline, Training, Fine-tuning, Evaluation, Model Manifest와 독립 Runtime을 담당할 계획입니다.
 
-현재 저장소에는 Provider Runtime, Pre-Training Readiness와 Dataset Admission Foundation이 구현되어 있습니다. 교체 가능한 in-memory/SQLite Job repository, 단일 Job worker boundary, Dataset Manifest·권리 Gate, 주입식 read-only authority resolver와 training dry-run을 검증합니다. 실제 Dataset, 모델, Checkpoint와 생성 음원은 포함하지 않습니다.
+현재 저장소에는 Provider Runtime, Pre-Training Readiness와 Dataset Admission·Enrollment Gate가 구현되어 있습니다. 교체 가능한 in-memory/SQLite Job repository, 단일 Job worker boundary, Dataset Manifest·권리 Gate, 주입식 read-only authority resolver, normalized rights evidence와 training dry-run을 검증합니다. 실제 Dataset, 모델, Checkpoint와 생성 음원은 포함하지 않습니다.
 
 ## 책임
 
@@ -98,7 +98,7 @@ Runtime Foundation과 Provider API는 deterministic Fake Provider 기준으로 �
 
 Pre-Training Readiness는 공통 Dataset Manifest 의미 계약에 맞춘 불변 DatasetVersion, deterministic split, checksum·provenance 무결성, fail-closed rights evidence와 training eligibility, TrainingRun/config snapshot, model compatibility preflight와 read-only dry-run을 제공합니다. `PRE_TRAINING_READY`는 이 계약 fixture가 Training 시작 직전 Gate를 통과한다는 의미이며 법률 승인, 실제 Dataset 승인, GPU 검증 또는 Training 실행을 뜻하지 않습니다.
 
-Dataset Admission Foundation은 `DOHAAUDIO_DATASET_ROOT`로 local authority 후보를 주입하고 root escape·symlink/junction·지원 형식·checksum·중복을 read-only로 검사한 뒤 공개 계약에는 logical ID만 반환합니다. 현재 조사된 세 후보는 권리, 형식, Manifest 또는 승인 근거가 부족해 모두 Training Admission `BLOCKED`이며 실제 Dataset Manifest·Split·TrainingConfig를 생성하지 않았습니다.
+Dataset Admission Foundation은 `DOHAAUDIO_DATASET_ROOT`로 local authority 후보를 주입하고 root escape·symlink/junction·지원 형식·checksum·중복을 read-only로 검사한 뒤 공개 계약에는 logical ID만 반환합니다. Enrollment Gate는 공급자 원문과 분리된 evidence adapter를 통해 candidate·Manifest·evidence ID·scope를 결합하고 exact inventory membership을 기존 Dataset Manifest에 등록합니다. 현재 조사된 세 후보는 권리, 형식, membership 또는 승인 근거가 부족해 모두 `BLOCKED`이며 실제 Dataset Manifest·DatasetVersion·Split·TrainingConfig는 발급하지 않았습니다.
 
 ```powershell
 python -m pip install -e ".[dev,runtime]"
