@@ -8,7 +8,7 @@ import re
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import StrEnum
-from typing import Protocol
+from typing import Protocol, runtime_checkable
 
 from pydantic import Field, field_validator, model_validator
 from pydantic_core import to_jsonable_python
@@ -330,6 +330,30 @@ class ReviewerIdentityMappingRevocation(FrozenModel):
         return self
 
 
+@runtime_checkable
+class ReviewerIdentityMappingStore(Protocol):
+    """Private persistence boundary; implementations must apply mutations atomically."""
+
+    def register(self, mapping: ReviewerIdentityMapping) -> ReviewerIdentityMapping: ...
+
+    def get(self, mapping_id: str, mapping_version: str) -> ReviewerIdentityMapping: ...
+
+    def revoke(
+        self,
+        mapping_id: str,
+        mapping_version: str,
+        *,
+        revoked_at: datetime,
+        reason_code: str,
+    ) -> ReviewerIdentityMappingRevocation: ...
+
+    def resolve(self, principal: AuthenticatedPrincipal, *, at: datetime) -> str: ...
+
+    def require_reviewer_current(
+        self, reviewer_id: str, *, at: datetime
+    ) -> ReviewerIdentityMapping: ...
+
+
 class ReviewerIdentityMappingRegistry:
     """Private in-memory mapping and revocation registry."""
 
@@ -505,7 +529,7 @@ class AuthenticatedReviewerResolver:
     def __init__(
         self,
         provider: AuthenticationProvider,
-        mappings: ReviewerIdentityMappingRegistry,
+        mappings: ReviewerIdentityMappingStore,
         *,
         expected_issuer_id: str,
         expected_audience_id: str,

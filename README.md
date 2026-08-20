@@ -1,7 +1,7 @@
 # DohaAudio
 
 > 문서 상태: [계획]
-> 구현 상태: Runtime·Pre-Training Readiness·Dataset Admission·Enrollment·Archive Inspection·Path Interpretation·Role Disposition·Semantic Evidence Review·Human Review Workflow·Reviewer Authentication Boundary [구현], 실제 OAuth/OIDC·reviewer 등록·승인 Dataset·실제 모델·Training [미구현]
+> 구현 상태: Runtime·Pre-Training Readiness·Dataset Admission·Enrollment·Archive Inspection·Path Interpretation·Role Disposition·Semantic Evidence Review·Human Review Workflow·Reviewer Authentication Boundary·Production Auth Design [구현], provider 선택·실제 OAuth/OIDC·reviewer 등록·승인 Dataset·실제 모델·Training [미구현]
 > 저장소: `DohaStudio/DohaAudio`
 > 공통 명세: `0.1.0` / `draft-baseline`
 > 명세 기준: `DohaStudio/.github` `main` (`1e4b480c8cbd6e51835f8550e685e9b136d8071d`)
@@ -92,6 +92,7 @@ flowchart LR
 - [Semantic Role Evidence Review](docs/05-data/semantic-role-evidence-review.md)
 - [Reviewer Authority와 Human Semantic Review Workflow](docs/05-data/human-semantic-review-workflow.md)
 - [Authenticated Reviewer Identity Boundary](docs/09-security/authenticated-reviewer-identity.md)
+- [Production Reviewer Authentication](docs/09-security/production-reviewer-authentication.md)
 - [Training 전략](docs/06-training/training-strategy.md)
 - [Evaluation 전략](docs/07-evaluation/evaluation-strategy.md)
 - [Runtime 계약](docs/08-runtime/runtime-contract.md)
@@ -117,6 +118,8 @@ Semantic Role Evidence Review Foundation은 candidate membership과 path·compan
 Human Semantic Review Workflow Foundation은 versioned reviewer authority, exact scope, effective·expiry·revocation, immutable review request·decision·supersession과 소비 시 current-evidence 재검증을 제공합니다. 이 registry 자체는 domain authorization 계약이고 별도 authentication boundary를 우회하지 않습니다. Repository에는 synthetic test authority만 있고 실제 candidate approval은 0개입니다.
 
 Authenticated Reviewer Identity Foundation은 provider-independent verification protocol, immutable sanitized principal, provider-issued verification context, private versioned principal→opaque reviewer mapping과 workflow guard를 제공합니다. 인증이 설정된 workflow는 caller-supplied reviewer ID를 신뢰하지 않고 현재 authentication·mapping·ReviewerAuthority를 순서대로 검증합니다. `FakeAuthenticationProvider`는 synthetic test 전용이며 실제 OAuth/OIDC, real identity mapping과 real reviewer authority는 모두 0이므로 production human approval은 계속 비활성화되어 있습니다.
+
+Production Authentication Design은 DohaMusic의 현재 local single-user 제한과 미확정 공개 인증·배포 요구를 근거로 provider 선택을 보류합니다. Secret-free provider config, explicit enablement, fake-production 차단, no-fallback factory, proof를 발급하지 않는 unavailable adapter와 persistent private mapping protocol을 구현했습니다. Provider selection·configuration·operation·mapping·authority·human review는 서로 다른 상태이며 현재 모두 production-disabled입니다.
 
 ```powershell
 python -m pip install -e ".[dev,runtime]"

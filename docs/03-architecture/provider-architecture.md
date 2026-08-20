@@ -48,7 +48,7 @@ DatasetManifestRegistry
 
 AuthenticationProvider
 → provider-issued VerifiedAuthenticationContext
-→ private ReviewerIdentityMappingRegistry
+→ private ReviewerIdentityMappingStore
 → opaque reviewer ID
 → existing ReviewerAuthorityRegistry
 → HumanSemanticReviewWorkflow
@@ -85,3 +85,5 @@ Provider Registry와 Capability Registry는 Provider 선택과 지원 capability
 Bounded evidence 이후의 human review는 `ReviewerAuthorityRegistry`와 `HumanSemanticReviewWorkflow` domain service가 담당합니다. Request·decision·revocation은 불변 record이고 최종 role-policy 소비 시 현재 evidence·policy·authority를 다시 확인합니다.
 
 `AuthenticationProvider`는 특정 OAuth SDK와 분리된 verification protocol입니다. Provider-issued context만 `AuthenticatedReviewerResolver`가 수용하며 private `ReviewerIdentityMappingRegistry`에서 provider principal을 opaque reviewer ID로 해석합니다. 인증이 설정된 workflow는 unauthenticated raw submission을 차단하고 authentication, mapping, 기존 authority scope를 차례로 검증합니다. Mapping revocation·expiry도 decision 소비 시 다시 확인하지만 provider subject·session은 semantic decision에 저장하지 않습니다. 현재 adapter는 deterministic fake뿐이며 실제 provider, real mapping과 real authority가 0이므로 production approval은 계속 비활성화되어 있습니다.
+
+Production 구성은 selection record, secret-free config, explicit factory와 adapter로 분리합니다. 현재 deployment·identity owner 요구가 부족해 provider selection은 보류됐으며 factory는 selection/config 없음, disabled·unknown·mismatch와 fake production config를 fail-closed합니다. Valid synthetic config도 proof를 발급하지 않는 unavailable stub만 구성합니다. Persistent private mapping implementation은 `ReviewerIdentityMappingStore` protocol 뒤에 두고 public `ReviewerAuthorityRegistry`와 합치지 않습니다.
