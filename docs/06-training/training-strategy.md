@@ -30,3 +30,9 @@ Checkpoint와 log는 `DohaArtifacts/audio`에 저장하며 Git에 포함하지 �
 Dry-run은 canonical config fingerprint와 deterministic planned `TrainingRun` identity만 계산합니다. DB·Artifact mutation, Dataset decode, model load, optimizer 생성·step, gradient, CUDA allocation과 Checkpoint write는 모두 0입니다. planned Run은 `started_at=null`, `optimizer_step=0`, output Checkpoint ID 없음 상태입니다.
 
 `PRE_TRAINING_READY=true`는 fixture 기반 코드·계약 Gate가 Training 직전 상태라는 뜻입니다. 실제 Dataset 법률 승인, Training 실행 승인, GPU 검증, 성능 또는 상업 이용 승인을 뜻하지 않습니다.
+
+## Training Admission
+
+`TrainingAdmissionService`는 `DATASET_AUTHORITY_VALID`, `RIGHTS_GATE_PASS`, `DATASET_INTEGRITY_PASS`, `DATASET_SPLIT_FROZEN`, `MODEL_SELECTED`, `TRAINING_CONFIG_VALID`, `ENVIRONMENT_PREFLIGHT_PASS`, `TRAINING_PREFLIGHT_PASS`, `TRAINING_EXECUTION_READY`를 별도 boolean으로 반환합니다. execution ready는 모든 Gate와 별도 실행 승인이 참일 때만 가능합니다.
+
+현재 실제 후보 조사에서는 권리 승인 Dataset Manifest, Music Generation training model/framework와 authoritative TrainingConfig가 없으므로 `TRAINING_EXECUTION_READY=false`입니다. 확인된 GPU 정보는 환경 inventory일 뿐 compatibility·VRAM 권장값 또는 실행 승인을 의미하지 않습니다. `TRAINING_APPROVAL_CONSUMED=false`, optimizer step·Checkpoint·GPU allocation·Evaluation execution은 모두 0입니다.

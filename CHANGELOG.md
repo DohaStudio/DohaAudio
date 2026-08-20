@@ -4,6 +4,11 @@
 
 ### 추가
 
+- 환경 변수로 주입되는 read-only Dataset authority resolver와 path-free logical inventory
+- root escape·symlink/junction·unsupported format·checksum·duplicate 차단 계약
+- Dataset·rights·split·model·config·environment·execution Gate를 분리한 Training Admission report
+- 실제 후보 세 scope의 sanitized inventory와 fail-closed admission 근거
+
 - SQLite 기반 영속 Job repository와 process restart 이후 idempotency·retry lineage 보존
 - atomic worker claim·lease, cancellation 관찰, structured failure와 stale-running fail-safe recovery
 - 내부 storage reference를 API와 분리하는 `ArtifactResolver` boundary
@@ -31,6 +36,7 @@
 
 ### 미구현
 
+- 권리 승인된 실제 Dataset Manifest·Split과 TrainingConfig
 - Music Generator, Stem Separation, Music Analysis
 - 실제 Dataset Migration·decode와 Training·Evaluation 실행
 - 실제 모델 Adapter·Checkpoint·GPU worker와 production DB

@@ -23,4 +23,6 @@ Runtime은 Windows·Linux·UNC·home 절대 경로와 `file:` URI를 거부합�
 
 SQLite DB 위치와 ArtifactResolver의 storage reference는 composition root에 주입하는 내부 정보이며 API·Manifest·structured error에 공개하지 않습니다. Dataset fixture는 logical sample ID, synthetic checksum과 안전한 source alias만 포함합니다. 실제 Dataset·권리 evidence 원문·사용자 DB·PID·command·environment에는 접근하지 않습니다.
 
+Dataset authority의 실제 root는 선택된 환경 변수에서만 읽고 외부 모델에는 authority ID, candidate ID와 opaque source key만 남깁니다. resolver는 symlink·junction·reparse point와 traversal을 차단하며 inventory는 파일을 변경하지 않습니다. tracked report에는 원본 파일명, 상대 경로, private registry row와 local root를 포함하지 않습니다.
+
 Training readiness는 rights/license/eligibility가 불명확하거나 evidence가 누락·미검토·만료된 경우 `BLOCKED`로 fail-closed 합니다. Dataset license, training permission, commercial usage, redistribution, model/weight license를 하나의 boolean으로 합치지 않습니다.

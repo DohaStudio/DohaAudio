@@ -38,7 +38,7 @@ DohaData/audio/
 - 개인정보·동의 증적 원본
 - 생성 음원, cache, 모델 weight와 Checkpoint
 
-모든 Dataset은 학습 허용, 목적별 권리, 라이선스 및 상업 이용 Gate를 별도로 통과해야 합니다. 기존 `DohaMusic-Datasets`의 실제 이동은 별도 Migration 계획과 승인 후 수행합니다.
+모든 Dataset은 학습 허용, 목적별 권리, 라이선스 및 상업 이용 Gate를 별도로 통과해야 합니다. local 후보 root는 `DOHAAUDIO_DATASET_ROOT`로 주입하고 실제 위치는 코드·Manifest·API·tracked report에 기록하지 않습니다. 후보는 이동하지 않고 read-only로 조사하며 실제 Migration은 별도 계획과 승인 후 수행합니다.
 
 ## 구현 계약
 
@@ -50,7 +50,12 @@ DohaData/audio/
 - membership, split, normalization, provenance 또는 권리 상태 변경은 새 DatasetVersion을 요구합니다.
 - rights evidence는 안전한 source alias, evidence ID, review status, effective/expiry만 기록하며 원문과 개인 경로는 포함하지 않습니다.
 - `training_allowed`는 `true`, `false`, `pending_review`를 사용하며 `true` 외에는 fail-closed 합니다.
+- `DatasetAuthorityResolver`는 missing/not-directory root, path traversal, symlink·junction·reparse escape를 차단하고 opaque sample/source ID만 inventory에 남깁니다.
+- checksum read는 명시적으로 요청할 때만 수행하고 inventory 과정에서 rename·move·delete·convert·normalize를 수행하지 않습니다.
+- 권리 Gate를 통과하지 못한 후보에는 실제 Dataset Manifest·Version·Split을 발급하지 않습니다.
 
 ## 관련 결정
 
 - [ADR-003 Dataset Policy](../10-decisions/ADR-003-dataset-policy.md)
+- [실제 Dataset Admission 상태](real-dataset-admission.md)
+- [ADR-007 Dataset Authority와 Training Admission](../10-decisions/ADR-007-dataset-authority-training-admission.md)
