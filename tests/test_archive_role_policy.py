@@ -19,6 +19,7 @@ from dohaaudio.archive_policy import (
     interpret_archive_paths,
 )
 from dohaaudio.archive_role_policy import (
+    CandidateIngestionDecision,
     CandidateRoleDispositionPolicy,
     CompanionGroupKind,
     StructuralGroupDisposition,
@@ -432,3 +433,66 @@ def test_decision_contract_is_path_and_raw_filename_free(tmp_path: Path) -> None
     serialized = decision.model_dump_json()
     assert str(tmp_path) not in serialized
     assert all(name not in serialized for name in names)
+
+
+def test_decision_contract_rejects_caller_supplied_readiness_contradictions(
+    tmp_path: Path,
+) -> None:
+    membership, relationships, companion = _relationship(
+        tmp_path / "readiness.zip",
+        ["/a.wav", "/a.mid", "/a.json"],
+    )
+    decision = decide_candidate_ingestion(
+        membership,
+        relationships,
+        _role_policy(membership, companion),
+    )
+    payload = decision.model_dump()
+    contradictions = (
+        ("source_relationship_pass", False),
+        ("role_policy_resolved", True),
+        ("group_policy_resolved", False),
+        ("structural_candidate_ready", False),
+        ("inventory_ready", True),
+        ("path_interpretation_pass", False),
+        (
+            "role_dispositions",
+            {
+                role: disposition
+                for role, disposition in decision.role_dispositions.items()
+                if role != CompanionRole.OTHER
+            },
+        ),
+        (
+            "groups",
+            (decision.groups[0].model_copy(update={"semantic_review_required": False}),),
+        ),
+    )
+    for field, value in contradictions:
+        with pytest.raises(ValidationError):
+            CandidateIngestionDecision(**(payload | {field: value}))
+
+
+def test_decision_contract_rejects_caller_supplied_aggregate_contradictions(
+    tmp_path: Path,
+) -> None:
+    membership, relationships, companion = _relationship(
+        tmp_path / "counts.zip",
+        ["/a.wav", "/a.mid", "/a.json"],
+    )
+    decision = decide_candidate_ingestion(
+        membership,
+        relationships,
+        _role_policy(membership, companion),
+    )
+    payload = decision.model_dump()
+    contradictions = (
+        ("total_group_count", 2),
+        ("complete_group_count", 0),
+        ("partial_group_count", 1),
+        ("orphan_group_count", 1),
+        ("duplicate_role_group_count", 1),
+    )
+    for field, value in contradictions:
+        with pytest.raises(ValidationError):
+            CandidateIngestionDecision(**(payload | {field: value}))

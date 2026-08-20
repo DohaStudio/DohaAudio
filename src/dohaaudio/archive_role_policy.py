@@ -74,8 +74,14 @@ class CompanionGroupIngestionDecision(FrozenModel):
 
     @model_validator(mode="after")
     def validate_decision(self) -> CompanionGroupIngestionDecision:
+        if self.member_count != len(self.roles):
+            raise ValueError("member count must match classified roles")
         if self.structural_included != (self.disposition == StructuralGroupDisposition.INCLUDE):
             raise ValueError("structural inclusion must match the group disposition")
+        if not self.reason_codes or any(
+            not reason.startswith("ROLE_POLICY_") for reason in self.reason_codes
+        ):
+            raise ValueError("group decisions require safe role-policy reason codes")
         assert_safe_metadata(self.model_dump(mode="python"))
         return self
 
@@ -90,6 +96,7 @@ class CandidateIngestionDecision(FrozenModel):
     companion_policy_id: str = Field(min_length=1)
     companion_policy_version: str = Field(min_length=1)
     source_relationship_pass: bool
+    path_interpretation_pass: bool
     total_group_count: int = Field(ge=0)
     complete_group_count: int = Field(ge=0)
     partial_group_count: int = Field(ge=0)
@@ -111,6 +118,25 @@ class CandidateIngestionDecision(FrozenModel):
     def validate_counts(self) -> CandidateIngestionDecision:
         if self.total_group_count != len(self.groups):
             raise ValueError("total group count must match group decisions")
+        kinds = Counter(group.group_kind for group in self.groups)
+        required_roles = {
+            CompanionRole.AUDIO,
+            CompanionRole.JSON,
+            CompanionRole.MIDI,
+        }
+        partial_count = sum(not required_roles.issubset(group.roles) for group in self.groups)
+        duplicate_count = sum(
+            any(count > 1 for count in Counter(group.roles).values()) for group in self.groups
+        )
+        if self.complete_group_count != kinds[CompanionGroupKind.COMPLETE]:
+            raise ValueError("complete group count must match decisions")
+        if self.partial_group_count != partial_count:
+            raise ValueError("partial group count must match decisions")
+        orphan_count = sum(len(set(group.roles) & required_roles) == 1 for group in self.groups)
+        if self.orphan_group_count != orphan_count:
+            raise ValueError("orphan group count must match decisions")
+        if self.duplicate_role_group_count != duplicate_count:
+            raise ValueError("duplicate-role group count must match decisions")
         dispositions = Counter(group.disposition for group in self.groups)
         if (
             self.structurally_included_group_count
@@ -126,8 +152,62 @@ class CandidateIngestionDecision(FrozenModel):
             raise ValueError("blocked group count must match decisions")
         if self.excluded_group_count != dispositions[StructuralGroupDisposition.EXCLUDE]:
             raise ValueError("excluded group count must match decisions")
-        if self.inventory_ready and not self.structural_candidate_ready:
-            raise ValueError("inventory readiness requires structural candidate readiness")
+        if set(self.role_dispositions) != set(CompanionRole):
+            raise ValueError("role dispositions must classify every structural role")
+
+        expected_relationship_pass = (
+            self.path_interpretation_pass
+            and bool(self.groups)
+            and self.complete_group_count == self.total_group_count
+        )
+        if self.source_relationship_pass != expected_relationship_pass:
+            raise ValueError("source relationship pass must match group decisions")
+        unresolved_roles = {
+            CompanionDisposition.REVIEW_REQUIRED,
+            CompanionDisposition.BLOCKED,
+        }
+        for group in self.groups:
+            semantic_review_required = any(
+                self.role_dispositions[role] in unresolved_roles for role in set(group.roles)
+            )
+            if group.semantic_review_required != semantic_review_required:
+                raise ValueError("semantic review must match role dispositions")
+
+        role_policy_resolved = not any(
+            disposition in unresolved_roles for disposition in self.role_dispositions.values()
+        )
+        group_policy_resolved = not (
+            dispositions[StructuralGroupDisposition.REVIEW_REQUIRED]
+            or dispositions[StructuralGroupDisposition.BLOCKED]
+        )
+        structural_candidate_ready = (
+            self.path_interpretation_pass
+            and group_policy_resolved
+            and dispositions[StructuralGroupDisposition.INCLUDE] > 0
+        )
+        inventory_ready = structural_candidate_ready and role_policy_resolved
+        if self.role_policy_resolved != role_policy_resolved:
+            raise ValueError("role-policy resolution must match role dispositions")
+        if self.group_policy_resolved != group_policy_resolved:
+            raise ValueError("group-policy resolution must match group decisions")
+        if self.structural_candidate_ready != structural_candidate_ready:
+            raise ValueError("structural readiness must match path and group decisions")
+        if self.inventory_ready != inventory_ready:
+            raise ValueError("inventory readiness must match structural and role resolution")
+
+        reasons: list[str] = []
+        if not self.path_interpretation_pass:
+            reasons.append("ROLE_POLICY_PATH_INTERPRETATION_BLOCKED")
+        if dispositions[StructuralGroupDisposition.BLOCKED]:
+            reasons.append("ROLE_POLICY_GROUP_BLOCKED")
+        if dispositions[StructuralGroupDisposition.REVIEW_REQUIRED]:
+            reasons.append("ROLE_POLICY_GROUP_REVIEW_REQUIRED")
+        if not role_policy_resolved:
+            reasons.append("ROLE_POLICY_SEMANTIC_REVIEW_REQUIRED")
+        if not dispositions[StructuralGroupDisposition.INCLUDE]:
+            reasons.append("ROLE_POLICY_NO_STRUCTURAL_GROUPS")
+        if self.blocking_reasons != tuple(reasons):
+            raise ValueError("blocking reasons must match decision state")
         assert_safe_metadata(self.model_dump(mode="python"))
         return self
 
@@ -204,6 +284,7 @@ def decide_candidate_ingestion(
         companion_policy_id=policy.companion_policy_id,
         companion_policy_version=policy.companion_policy_version,
         source_relationship_pass=relationships.relationship_pass,
+        path_interpretation_pass=membership.path_interpretation_pass,
         total_group_count=relationships.group_count,
         complete_group_count=relationships.complete_group_count,
         partial_group_count=relationships.partial_group_count,
