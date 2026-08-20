@@ -94,7 +94,10 @@ class EnvironmentPreflight(FrozenModel):
 
 
 class UsageRightsAdmission(FrozenModel):
+    candidate_id: str = Field(min_length=1)
+    dataset_manifest_id: str = Field(min_length=1)
     evidence_ids: tuple[str, ...] = Field(min_length=1)
+    scopes: tuple[str, ...] = Field(min_length=1)
     review_status: EvidenceReviewStatus
     effective_at: datetime
     expires_at: datetime | None = None
@@ -367,10 +370,26 @@ class TrainingAdmissionService:
             reasons.append("DATASET_AUTHORITY_INVALID")
 
         integrity_issues = validate_dataset_manifest(manifest) if manifest is not None else ()
+        manifest_membership = (
+            {
+                (
+                    entry.sample_id,
+                    entry.content_checksum,
+                    entry.media_type,
+                    entry.provenance,
+                )
+                for entry in manifest.entries
+            }
+            if manifest is not None
+            else set()
+        )
+        inventory_membership = {
+            (item.sample_id, item.checksum, item.media_type, item.provenance)
+            for item in inventory.items
+        }
         inventory_matches_manifest = manifest is not None and (
             manifest.item_count == inventory.supported_item_count
-            and {entry.content_checksum for entry in manifest.entries}
-            == {item.checksum for item in inventory.items}
+            and manifest_membership == inventory_membership
         )
         dataset_integrity_pass = (
             manifest is not None
@@ -392,7 +411,9 @@ class TrainingAdmissionService:
         if inventory.unsupported_file_count:
             reasons.append("DATASET_UNSUPPORTED_FILES_PRESENT")
 
-        rights_gate_pass = self._rights_pass(manifest, usage_rights, checked_at)
+        rights_gate_pass = self._rights_pass(
+            manifest, usage_rights, inventory.candidate_id, checked_at
+        )
         if not rights_gate_pass:
             reasons.append("RIGHTS_GATE_BLOCKED")
         dataset_split_frozen = manifest is not None and not any(
@@ -449,6 +470,7 @@ class TrainingAdmissionService:
     def _rights_pass(
         manifest: DatasetManifest | None,
         usage_rights: UsageRightsAdmission | None,
+        candidate_id: str,
         now: datetime,
     ) -> bool:
         if manifest is None or usage_rights is None:
@@ -456,6 +478,14 @@ class TrainingAdmissionService:
         if manifest.license_status != DatasetLicenseStatus.APPROVED:
             return False
         if manifest.training_allowed != TrainingAllowed.TRUE or not manifest.rights_evidence:
+            return False
+        manifest_evidence_ids = {evidence.evidence_id for evidence in manifest.rights_evidence}
+        if (
+            usage_rights.candidate_id != candidate_id
+            or usage_rights.dataset_manifest_id != manifest.dataset_manifest_id
+            or not set(usage_rights.evidence_ids).issubset(manifest_evidence_ids)
+            or "ai_training" not in usage_rights.scopes
+        ):
             return False
         manifest_evidence_valid = all(
             evidence.review_status == EvidenceReviewStatus.VERIFIED

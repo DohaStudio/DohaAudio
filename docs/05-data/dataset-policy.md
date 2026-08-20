@@ -49,6 +49,7 @@ DohaData/audio/
 - sample ID·checksum 중복, 누락 membership, overlap, unsupported media type과 manifest checksum 불일치를 차단합니다.
 - membership, split, normalization, provenance 또는 권리 상태 변경은 새 DatasetVersion을 요구합니다.
 - rights evidence는 안전한 source alias, evidence ID, review status, effective/expiry만 기록하며 원문과 개인 경로는 포함하지 않습니다.
+- Admission용 rights snapshot은 candidate·Dataset Manifest identity와 scope를 evidence ID에 결합하며 다른 Dataset의 evidence를 재사용하지 않습니다.
 - `training_allowed`는 `true`, `false`, `pending_review`를 사용하며 `true` 외에는 fail-closed 합니다.
 - `DatasetAuthorityResolver`는 missing/not-directory root, path traversal, symlink·junction·reparse escape를 차단하고 opaque sample/source ID만 inventory에 남깁니다.
 - checksum read는 명시적으로 요청할 때만 수행하고 inventory 과정에서 rename·move·delete·convert·normalize를 수행하지 않습니다.

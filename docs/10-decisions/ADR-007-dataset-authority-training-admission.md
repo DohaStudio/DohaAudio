@@ -15,6 +15,7 @@ Pre-Training Readiness fixture가 통과해도 local Dataset 보유, Dataset 권
 3. traversal, symlink, junction과 reparse point가 authority root를 벗어나면 차단합니다.
 4. inventory와 checksum은 read-only이며 원본 rename·move·delete·변환·정규화를 금지합니다.
 5. 권리 evidence, training permission, commercial use와 redistribution을 독립적으로 판단합니다.
+   evidence는 candidate·Dataset Manifest identity와 허용 scope가 일치할 때만 해당 Gate에 사용합니다.
 6. 권리 Gate를 통과하지 못한 후보에는 Dataset Manifest·Version·Split을 발급하지 않습니다.
 7. Dataset authority, rights, integrity, split, model, config, environment, preflight와 execution Gate를 분리합니다.
 8. execution ready는 모든 Gate와 별도 Training 승인 소비가 참일 때만 가능합니다.
