@@ -5,7 +5,7 @@
 | Phase | 목표 | 상태 | 주요 산출물 |
 |---|---|---|---|
 | 1 | Repository Foundation | [계획] | 문서 체계, 작업 규칙, 기본 계약 |
-| 2 | Dataset Strategy | [진행 중] | Manifest·Version·split·integrity·rights evidence·authority/enrollment·archive inspection·path/companion·role disposition·semantic evidence·human review·authentication·production auth design [구현], provider selection·reviewer activation·승인 Dataset 0개 |
+| 2 | Dataset Strategy | [진행 중] | Manifest·Version·split·integrity·rights evidence·authority/enrollment·archive inspection·path/companion·role disposition·semantic evidence·human review·authentication·delegated provider-model selection [구현], adapter·reviewer activation·승인 Dataset 0개 |
 | 3 | Training | [진행 중] | Run/config·preflight·dry-run [구현], optimizer 실행 [미구현] |
 | 4 | Music Generation | [계획] | 교체 가능한 Music Generator와 Instrumental 기능 |
 | 5 | Stem Separation | [계획] | Stem 모델 Adapter와 출력 계약 |
@@ -26,4 +26,4 @@
 
 ## 현재 범위
 
-학습 전 Runtime·Readiness·Admission Foundation은 SQLite Job persistence, worker claim/recovery, Dataset authority resolver·inventory, rights validation, ZIP central-directory membership inspection, candidate-bound path·companion·role disposition policy, bounded semantic evidence review, reviewer authentication boundary·provider-neutral production auth design과 read-only dry-run 범위에서 구현했습니다. Deployment·identity 요구가 미확정이므로 provider selection은 보류했고 실제 OAuth/OIDC provider·identity mapping·ReviewerAuthority는 아직 없습니다. 실제 후보 세 scope도 semantic·rights·integrity·enrollment Gate에서 fail-closed로 차단됐습니다. 이는 Phase 2·3·7·8 전체 완료 판정이 아니며 archive extraction, Dataset Migration, semantic role 자동 승인, 모델 다운로드·load, optimizer step, Checkpoint, 실제 Music Generation·Stem Separation·Audio Analysis, GPU Runtime과 DohaMusic 실제 연동은 수행하지 않았습니다.
+학습 전 Runtime·Readiness·Admission Foundation은 SQLite Job persistence, worker claim/recovery, Dataset authority resolver·inventory, rights validation, ZIP central-directory membership inspection, candidate-bound path·companion·role disposition policy, bounded semantic evidence review, reviewer authentication boundary·production auth selection과 read-only dry-run 범위에서 구현했습니다. DohaMusic V1 authority로 `DOHAMUSIC_DELEGATED_ASSERTION` selection은 완료됐지만 config·verification adapter·identity mapping·ReviewerAuthority는 아직 없습니다. 실제 후보 세 scope도 semantic·rights·integrity·enrollment Gate에서 fail-closed로 차단됐습니다. 이는 Phase 2·3·7·8 전체 완료 판정이 아니며 archive extraction, Dataset Migration, semantic role 자동 승인, 모델 다운로드·load, optimizer step, Checkpoint, 실제 Music Generation·Stem Separation·Audio Analysis, GPU Runtime과 DohaMusic 실제 연동은 수행하지 않았습니다.

@@ -28,7 +28,7 @@
 | FR-019 | human semantic review가 versioned reviewer authority, exact scope, immutable request·decision lineage와 expiry·revocation·stale evidence 재검증을 거쳐야 한다. | Governance Foundation [구현], 실제 authentication·reviewer 등록 [미구현] |
 | FR-020 | candidate-bound bounded sampling으로 JSON schema·MIDI header evidence를 sanitized하게 수집하고 automated analysis와 human semantic approval을 분리해야 한다. | Foundation [구현], 실제 semantic 승인 [검토 필요] |
 | FR-021 | trusted provider verification, private principal→opaque reviewer mapping과 기존 ReviewerAuthority를 순서대로 검증하고 인증만으로 reviewer를 자동 등록하지 않아야 한다. | Authentication Foundation [구현], 실제 provider·mapping·authority [미구현] |
-| FR-022 | Production authentication provider는 deployment·identity 요구사항에 근거해 명시적으로 선택·활성화하고 missing·disabled·unknown·fake config를 fail-closed해야 한다. | Provider-neutral contract [구현], provider 선택·activation [미구현] |
+| FR-022 | Production authentication provider는 deployment·identity 요구사항에 근거해 명시적으로 선택·활성화하고 missing·disabled·unknown·fake config를 fail-closed해야 한다. | `DOHAMUSIC_DELEGATED_ASSERTION` selection [구현], config·adapter activation [미구현] |
 
 ## 비기능 요구사항
 

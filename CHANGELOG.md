@@ -4,6 +4,10 @@
 
 ### 추가
 
+- DohaMusic ADR-038 authority에 따른 `DOHAMUSIC_DELEGATED_ASSERTION` production authentication provider-model selection
+- issuer DohaMusic·audience DohaAudio, short-lived·freshness·expiry·replay resistance와 offline-capable policy contract
+- ADR-014 historical no-selection을 보존하는 ADR-015과 selected/configured/operational 분리 회귀 테스트
+
 - 미확정 deployment·identity 요구를 기록하는 production authentication provider no-selection decision
 - secret-free provider config, explicit enablement, fake-production 차단과 no-fallback bootstrap/factory
 - 검증 proof를 발급하지 않는 unavailable production adapter와 private mapping store protocol
