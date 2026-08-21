@@ -24,6 +24,7 @@ SAFE_ALGORITHM = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._+-]*$")
 
 
 class ProductionAuthenticationProviderType(StrEnum):
+    DOHAMUSIC_DELEGATED_ASSERTION = "DOHAMUSIC_DELEGATED_ASSERTION"
     LOCAL_OPERATOR = "local_operator"
     OIDC = "oidc"
     GITHUB_IDENTITY = "github_identity"
@@ -35,19 +36,61 @@ class ProviderSelectionStatus(StrEnum):
     PENDING_REQUIREMENTS = "pending_requirements"
 
 
+class ReviewerAssertionLifetime(StrEnum):
+    SHORT_LIVED = "SHORT_LIVED"
+
+
+class DohaMusicDelegatedAssertionPolicy(FrozenModel):
+    """Product-authority constraints for the future delegated assertion adapter."""
+
+    issuer_owner: str = Field(min_length=1)
+    audience: str = Field(min_length=1)
+    lifetime: ReviewerAssertionLifetime
+    freshness_required: bool
+    expiry_required: bool
+    replay_resistance_required: bool
+    external_auth_network_required: bool
+    offline_capable: bool
+    upstream_mfa_required: bool
+
+    @field_validator("issuer_owner", "audience")
+    @classmethod
+    def require_safe_authority_identifiers(cls, value: str) -> str:
+        return _require_safe_identifier(value, "delegated assertion authority")
+
+    @model_validator(mode="after")
+    def require_v1_authority(self) -> DohaMusicDelegatedAssertionPolicy:
+        if self.issuer_owner != "DohaMusic":
+            raise ValueError("delegated reviewer assertion issuer must be DohaMusic")
+        if self.audience != "DohaAudio":
+            raise ValueError("delegated reviewer assertion audience must be DohaAudio")
+        if not self.freshness_required or not self.expiry_required:
+            raise ValueError("delegated reviewer assertions require freshness and expiry")
+        if not self.replay_resistance_required:
+            raise ValueError("delegated reviewer assertions require replay resistance")
+        if self.external_auth_network_required or not self.offline_capable:
+            raise ValueError("V1 delegated reviewer authentication must be offline-capable")
+        if self.upstream_mfa_required:
+            raise ValueError("V1 does not require upstream reviewer MFA")
+        return self
+
+
 class AuthenticationProviderSelection(FrozenModel):
     """Versioned decision, intentionally separate from runtime activation."""
 
     decision_version: str = Field(min_length=1)
     status: ProviderSelectionStatus
     selected_provider_type: ProductionAuthenticationProviderType | None = None
+    selected_external_identity_provider: ProductionAuthenticationProviderType | None = None
+    delegated_assertion_policy: DohaMusicDelegatedAssertionPolicy | None = None
+    authority_reference_id: str = Field(min_length=1)
     rationale_codes: tuple[str, ...] = Field(min_length=1)
     unresolved_requirement_codes: tuple[str, ...] = ()
 
-    @field_validator("decision_version")
+    @field_validator("decision_version", "authority_reference_id")
     @classmethod
     def require_safe_version(cls, value: str) -> str:
-        return _require_safe_identifier(value, "decision version")
+        return _require_safe_identifier(value, "selection authority identifier")
 
     @field_validator("rationale_codes", "unresolved_requirement_codes")
     @classmethod
@@ -66,10 +109,31 @@ class AuthenticationProviderSelection(FrozenModel):
                 raise ValueError("selected status requires a provider type")
             if self.unresolved_requirement_codes:
                 raise ValueError("selected status cannot retain unresolved requirements")
-        elif self.selected_provider_type is not None:
-            raise ValueError("pending selection cannot name a selected provider type")
+        elif (
+            self.selected_provider_type is not None
+            or self.selected_external_identity_provider is not None
+            or self.delegated_assertion_policy is not None
+        ):
+            raise ValueError("pending selection cannot name a selected provider or policy")
         elif not self.unresolved_requirement_codes:
             raise ValueError("pending selection requires unresolved requirements")
+
+        if self.selected_external_identity_provider not in (
+            None,
+            ProductionAuthenticationProviderType.OIDC,
+            ProductionAuthenticationProviderType.GITHUB_IDENTITY,
+        ):
+            raise ValueError("external identity provider must be OIDC, GitHub Identity, or null")
+        if (
+            self.selected_provider_type
+            == ProductionAuthenticationProviderType.DOHAMUSIC_DELEGATED_ASSERTION
+        ):
+            if self.selected_external_identity_provider is not None:
+                raise ValueError("delegated DohaMusic identity cannot select an external IdP")
+            if self.delegated_assertion_policy is None:
+                raise ValueError("delegated DohaMusic identity requires its authority policy")
+        elif self.delegated_assertion_policy is not None:
+            raise ValueError("delegated assertion policy requires the delegated provider model")
         return self
 
 
@@ -86,6 +150,7 @@ class ProductionAuthenticationProviderConfig(FrozenModel):
     maximum_clock_skew_seconds: int = Field(default=0, ge=0, le=300)
     maximum_authentication_age_seconds: int | None = Field(default=None, gt=0)
     network_access_required: bool
+    replay_protection_required: bool = False
 
     @field_validator(
         "configuration_version", "provider_id", "expected_issuer_id", "expected_audience_id"
@@ -110,6 +175,17 @@ class ProductionAuthenticationProviderConfig(FrozenModel):
                 raise ValueError("OIDC configuration requires an explicit algorithm allowlist")
             if not self.network_access_required:
                 raise ValueError("OIDC configuration must declare its production network boundary")
+        if self.provider_type == ProductionAuthenticationProviderType.DOHAMUSIC_DELEGATED_ASSERTION:
+            if self.expected_issuer_id != "DohaMusic":
+                raise ValueError("delegated reviewer assertion issuer must be DohaMusic")
+            if self.expected_audience_id != "DohaAudio":
+                raise ValueError("delegated reviewer assertion audience must be DohaAudio")
+            if self.allowed_algorithms:
+                raise ValueError("assertion algorithm remains unselected")
+            if self.network_access_required:
+                raise ValueError("delegated reviewer assertion cannot require an external network")
+            if not self.replay_protection_required:
+                raise ValueError("delegated reviewer assertion requires replay protection")
         return self
 
 
@@ -250,14 +326,39 @@ def _require_safe_identifier(value: str, label: str) -> str:
     return value
 
 
-CURRENT_PRODUCTION_AUTHENTICATION_SELECTION = AuthenticationProviderSelection(
+HISTORICAL_PRODUCTION_AUTHENTICATION_SELECTION = AuthenticationProviderSelection(
     decision_version="auth-provider-selection/v1",
     status=ProviderSelectionStatus.PENDING_REQUIREMENTS,
+    authority_reference_id="dohaaudio/adr-014",
     rationale_codes=("REPOSITORY_EVIDENCE_INSUFFICIENT",),
     unresolved_requirement_codes=(
         "DEPLOYMENT_TOPOLOGY_UNRESOLVED",
         "IDENTITY_ISSUER_UNRESOLVED",
         "ACCOUNT_LIFECYCLE_OWNER_UNRESOLVED",
         "LOGIN_FLOW_UNRESOLVED",
+    ),
+)
+
+
+CURRENT_PRODUCTION_AUTHENTICATION_SELECTION = AuthenticationProviderSelection(
+    decision_version="auth-provider-selection/v2",
+    status=ProviderSelectionStatus.SELECTED,
+    selected_provider_type=ProductionAuthenticationProviderType.DOHAMUSIC_DELEGATED_ASSERTION,
+    selected_external_identity_provider=None,
+    delegated_assertion_policy=DohaMusicDelegatedAssertionPolicy(
+        issuer_owner="DohaMusic",
+        audience="DohaAudio",
+        lifetime=ReviewerAssertionLifetime.SHORT_LIVED,
+        freshness_required=True,
+        expiry_required=True,
+        replay_resistance_required=True,
+        external_auth_network_required=False,
+        offline_capable=True,
+        upstream_mfa_required=False,
+    ),
+    authority_reference_id="dohamusic/adr-038",
+    rationale_codes=(
+        "DOHAMUSIC_V1_PRODUCT_AUTHORITY_CONFIRMED",
+        "DELEGATED_ASSERTION_PROVIDER_MODEL_SELECTED",
     ),
 )

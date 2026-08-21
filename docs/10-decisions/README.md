@@ -17,6 +17,7 @@
 | [ADR-011](ADR-011-semantic-role-evidence-review-boundary.md) | Semantic Role Evidence Review와 승인 경계 | 승인됨 [구현] |
 | [ADR-012](ADR-012-reviewer-authority-human-semantic-review-workflow.md) | Reviewer Authority Registry와 Human Semantic Review Workflow | 승인됨 [구현] |
 | [ADR-013](ADR-013-authenticated-reviewer-identity-boundary.md) | Authenticated Reviewer Identity Boundary | 승인됨 [구현] |
-| [ADR-014](ADR-014-production-reviewer-authentication-provider-selection.md) | Production Reviewer Authentication Provider Selection | 승인됨 [선택 보류·설계 기반 구현] |
+| [ADR-014](ADR-014-production-reviewer-authentication-provider-selection.md) | Production Reviewer Authentication Provider Selection | 대체됨 [historical no-selection·설계 기반 유지] |
+| [ADR-015](ADR-015-dohamusic-delegated-reviewer-assertion-provider-selection.md) | DohaMusic Delegated Reviewer Assertion Provider Selection | 승인됨 [selection 완료·구현 대기] |
 
 결정이 대체되면 기존 ADR을 삭제하지 않고 상태와 대체 ADR 링크를 기록합니다.

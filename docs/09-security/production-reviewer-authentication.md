@@ -1,17 +1,17 @@
-# Production Reviewer Authentication 설계 기반
+# Production Reviewer Authentication Selection
 
-> 문서 상태: provider-neutral production contract [구현]
-> Provider 선택·설정·실제 검증·private store·reviewer 운영: [미구현]
+> 문서 상태: provider model selection·provider-neutral contract [구현]
+> Configuration·실제 검증·private store·reviewer 운영: [미구현]
 
-## 조사된 운영 전제
+## Authority와 historical decision
 
 - DohaAudio는 사용자를 직접 소유하지 않는 독립 Provider이며 DohaMusic만 호출합니다.
 - 사용자 권한과 최종 Workspace 상태는 DohaMusic 책임입니다.
-- DohaMusic의 현재 제품은 로컬 단일 사용자 제한이고 인증·소유권은 공개 운영 선행 조건입니다.
-- 초기 구성은 한 개발 머신에 놓일 수 있지만 운영 topology, identity issuer, browser login, remote API와 account lifecycle은 확정되지 않았습니다.
+- DohaMusic V1은 local-only이고 일반 product login 없이 single owner/operator reviewer authentication을 요구합니다.
+- Upstream identity는 `LOCAL_AUTHENTICATED_OPERATOR`, proof model은 `OS_BOUND_LOCAL_OPERATOR_CREDENTIAL`이며 concrete OS adapter는 미구현입니다.
 - DohaLM은 cloud deployment가 범위 밖이고 authentication이 없으며, DohaVocal과 공통 저장소에도 production identity convention이 없습니다.
 
-따라서 reviewer 수, single-user에서 multi-user로의 전환 방식, browser/CLI login, internet 의존 허용, issuer control, MFA, recovery, revocation owner를 저장소 근거만으로 확정할 수 없습니다.
+ADR-014는 product authority가 없던 당시 provider를 선택하지 않은 올바른 historical fail-closed decision입니다. DohaMusic PR #109와 ADR-038이 V1 topology·reviewer·identity·network·assurance를 확정해 provider-selection blocker를 해결했고 ADR-015가 selection state만 대체합니다.
 
 ## 후보 평가
 
@@ -25,11 +25,11 @@
 | network dependency | 경계에 따라 없음 | discovery/JWKS 또는 고정 key 운영 필요 | OAuth/API 의존 |
 | 현재 근거 | trusted local credential 방식 미정 | issuer·client·deployment 미정 | source-control identity 외 제품 identity 근거 없음 |
 
-Local Operator는 현재 topology와 가깝지만 “같은 PC”를 authentication proof로 사용할 수 없습니다. OIDC는 이식 가능한 후보지만 issuer, audience, browser redirect, nonce/state, key rotation과 account lifecycle 요구가 먼저 필요합니다. GitHub repository 사용은 product reviewer identity 선택 근거가 아니며 GitHub username이나 account ID도 opaque reviewer ID 또는 `ReviewerAuthority`가 아닙니다. 별도 자체 계정·mTLS·reverse proxy 후보도 owner와 운영 경계가 없어 추가 선택 근거가 없습니다.
+Local Operator는 upstream human identity model로 선택됐지만 “같은 PC”, localhost, process owner 또는 OS username을 proof로 사용할 수 없습니다. OIDC와 GitHub Identity는 V1 external identity provider로 선택하지 않았습니다. DohaAudio downstream model은 external vendor IdP가 아닌 `DOHAMUSIC_DELEGATED_ASSERTION`입니다.
 
 ## 결정과 상태
 
-현재 결정은 `PENDING_REQUIREMENTS`이고 `AUTH_PROVIDER_SELECTED=false`입니다. Provider type 선택, config 존재, adapter operational, private mapping 존재, authority 부여와 human review 활성화는 각각 독립 상태입니다.
+현재 decision version은 `auth-provider-selection/v2`입니다. DohaMusic ADR-038 authority에 따라 `AUTH_PROVIDER_SELECTED=true`, `SELECTED_AUTHENTICATION_PROVIDER_MODEL=DOHAMUSIC_DELEGATED_ASSERTION`, `SELECTED_EXTERNAL_IDENTITY_PROVIDER=null`입니다. Provider model 선택, config 존재, adapter operational, private mapping 존재, authority 부여와 human review 활성화는 각각 독립 상태입니다.
 
 ```text
 provider type selected
@@ -40,30 +40,44 @@ provider type selected
 != human review enabled
 ```
 
-현재 실제 상태는 `AUTH_PROVIDER_CONFIGURED=false`, `AUTH_PROVIDER_OPERATIONAL=false`, `PRIVATE_IDENTITY_STORE_OPERATIONAL=false`, real mapping·authority·approval 모두 0입니다.
+현재 실제 상태는 `AUTH_PROVIDER_CONFIGURED=false`, `AUTH_PROVIDER_OPERATIONAL=false`, `PRIVATE_IDENTITY_STORE_OPERATIONAL=false`, real mapping·authority·approval 모두 0입니다. Current selection을 config 없이 bootstrap하면 `AUTH_PROVIDER_NOT_CONFIGURED`로 fail-closed합니다.
+
+```yaml
+AUTH_PROVIDER_SELECTED: true
+SELECTED_AUTHENTICATION_PROVIDER_MODEL: DOHAMUSIC_DELEGATED_ASSERTION
+SELECTED_EXTERNAL_IDENTITY_PROVIDER: null
+AUTH_PROVIDER_CONFIGURED: false
+AUTH_PROVIDER_OPERATIONAL: false
+PRIVATE_IDENTITY_STORE_OPERATIONAL: false
+REAL_IDENTITY_MAPPING_COUNT: 0
+REAL_REVIEWER_AUTHORITY_COUNT: 0
+REAL_HUMAN_APPROVAL_COUNT: 0
+```
 
 ## 구현 계약
 
-`AuthenticationProviderSelection`은 versioned selection 또는 unresolved requirements를 기록합니다. `ProductionAuthenticationProviderConfig`는 provider ID/type, expected issuer/audience, algorithm allowlist, freshness/clock policy, network requirement와 explicit `enabled`만 포함합니다. Pydantic extra-field 차단 때문에 token, password, key, client secret 같은 값은 config에 추가할 수 없습니다.
+`AuthenticationProviderSelection`은 versioned selection 또는 unresolved requirements를 기록합니다. Historical v1 record는 보존하고 current v2 record는 `dohamusic/adr-038` authority reference, external IdP null과 immutable `DohaMusicDelegatedAssertionPolicy`를 포함합니다. Policy는 issuer owner DohaMusic, audience DohaAudio, `SHORT_LIVED`, freshness·expiry·replay resistance required, external auth network false, offline capable true와 upstream MFA false를 exact하게 검증합니다.
+
+`ProductionAuthenticationProviderConfig`는 provider ID/type, expected issuer/audience, algorithm allowlist, freshness/clock policy, network·replay requirement와 explicit `enabled`만 포함합니다. Delegated model의 synthetic contract config도 issuer/audience exact match, external network false, replay required와 empty algorithm list를 강제합니다. Assertion format·crypto algorithm·exact TTL은 미선택입니다. Pydantic extra-field 차단 때문에 token, password, key, assertion, client secret 같은 값을 config에 추가할 수 없습니다.
 
 `AuthenticationProviderFactory`는 다음을 fail-closed합니다.
 
-- selection 없음 → `AUTH_PROVIDER_NOT_SELECTED`
+- historical/pending selection → `AUTH_PROVIDER_NOT_SELECTED`
 - config 없음 → `AUTH_PROVIDER_NOT_CONFIGURED`
 - disabled config → `AUTH_PROVIDER_DISABLED`
 - selection/config 불일치 → `AUTH_PROVIDER_SELECTION_MISMATCH`
 - fake production 사용 → `AUTH_PROVIDER_FAKE_FORBIDDEN`
 - unknown provider enum → configuration validation 실패
 
-명시적 synthetic selection과 valid config가 있어도 현재 factory는 `UnavailableProductionAuthenticationProvider`만 만듭니다. 이 stub은 `operational=false`이며 `verify()`와 `revalidate()`에서 `AUTH_PROVIDER_NOT_OPERATIONAL`만 반환하고 `VerifiedAuthenticationContext`를 절대 발급하지 않습니다. 기본 provider와 fake fallback은 없습니다.
+명시적 synthetic delegated selection과 valid config가 있어도 현재 factory는 `UnavailableProductionAuthenticationProvider`만 만듭니다. 이 stub은 `operational=false`이며 `verify()`와 `revalidate()`에서 `AUTH_PROVIDER_NOT_OPERATIONAL`만 반환하고 `VerifiedAuthenticationContext`를 절대 발급하지 않습니다. Local Operator, OIDC, GitHub Identity, 기본 provider와 fake fallback은 없습니다.
 
-향후 real adapter는 기존 `AuthenticationProvider`를 구현하고 `AuthenticationCredentialReference`를 ephemeral input, 기존 `VerifiedAuthenticationContext`를 유일한 trusted output으로 사용합니다. 서명·authenticity, exact issuer/audience, subject, algorithm allowlist, expiry/not-before, clock/freshness와 assurance를 검증해야 합니다. Raw assertion과 credential은 장기 저장하지 않습니다.
+향후 real delegated adapter는 기존 `AuthenticationProvider`를 구현하고 `AuthenticationCredentialReference`를 ephemeral input, 기존 `VerifiedAuthenticationContext`를 유일한 trusted output으로 사용합니다. 서명·authenticity, exact issuer/audience, subject, expiry/not-before, clock/freshness, replay resistance와 assurance를 검증해야 합니다. Raw assertion과 credential은 장기 저장하지 않습니다.
 
-Network client는 adapter 내부 별도 boundary이며 TLS, timeout과 bounded retry를 composition owner가 정합니다. Authentication failure는 application이 무한 재시도하지 않습니다. OIDC를 선택할 경우 discovery/JWKS cache, key rotation, nonce/state와 claims minimization을 real adapter PR에서 확정합니다.
+V1 selected architecture는 external IdP network 없이 offline-capable해야 합니다. Same-machine DohaMusic↔DohaAudio transport는 external authentication network와 별도입니다. Assertion transport·format·algorithm, exact TTL, replay cache, key storage·rotation과 bounded retry는 real adapter PR 전 별도 계약으로 정합니다. Authentication failure는 application이 무한 재시도하지 않습니다.
 
 ## Secret과 private identity store
 
-`SecretResolver`는 private composition boundary뿐이며 구현과 secret reference도 이번 단계에 없습니다. 실제 secret, `.env`, token, key 생성·저장·조회는 0입니다.
+`SecretResolver`는 private composition boundary뿐이며 구현과 secret reference도 이번 단계에 없습니다. 실제 signing/verification key, secret, `.env`, token, assertion 생성·저장·조회는 0입니다.
 
 `ReviewerIdentityMappingStore`는 기존 register/get/revoke/resolve/current-check semantics를 persistent implementation이 제공하기 위한 protocol입니다. 기존 `ReviewerIdentityMappingRegistry`가 synthetic in-memory implementation으로 이 protocol을 만족합니다. 한 mutation은 부분 mapping·revocation을 남기지 않도록 implementation transaction owner가 atomic하게 처리해야 합니다.
 
@@ -71,4 +85,4 @@ Private store에는 provider/issuer/private subject reference와 opaque reviewer
 
 ## 미구현과 운영 차단
 
-실제 OAuth exchange, OIDC discovery/JWKS, GitHub API, local OS credential 검증, secret store, persistent private DB, identity mapping provisioning, authority provisioning과 semantic decision은 구현하지 않았습니다. Production human review는 계속 비활성화됩니다. Authentication 상태는 Rights·Integrity·Split·Model·Config·Environment·Training Gate를 변경하지 않습니다.
+실제 local OS credential 검증, assertion signing·verification, OAuth/OIDC/JWKS/GitHub API, replay cache, secret store, persistent private DB, identity mapping provisioning, authority provisioning과 semantic decision은 구현하지 않았습니다. Production human review는 계속 비활성화됩니다. Authentication selection은 Rights·Integrity·Split·Model·Config·Environment·Training Gate를 변경하지 않습니다.

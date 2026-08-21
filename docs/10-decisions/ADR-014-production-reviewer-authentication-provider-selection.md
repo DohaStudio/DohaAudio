@@ -2,11 +2,13 @@
 
 ## 상태
 
-Accepted no-selection decision — 2026-08-21
+Superseded provider-selection state by ADR-015 — historical no-selection decision — 2026-08-21
 
 ## 배경
 
 ADR-013은 provider-independent authentication과 private mapping 경계를 구현했지만 real provider는 선택하지 않았습니다. DohaAudio는 DohaMusic이 호출하는 독립 Provider이고 사용자 권한은 DohaMusic 책임입니다. 현재 DohaMusic은 local single-user 제한이며 공개 운영 인증·소유권은 미구현입니다. 운영 topology, reviewer population, browser/CLI 흐름, issuer owner, internet dependency, MFA·recovery·revocation 요구도 확정되지 않았습니다.
+
+이 문서의 no-selection은 당시 product authority가 unresolved였을 때의 올바른 fail-closed historical decision입니다. 이후 DohaMusic PR #109와 ADR-038이 V1 authority를 확정해 provider-selection blocker를 해결했으며, [ADR-015](ADR-015-dohamusic-delegated-reviewer-assertion-provider-selection.md)가 selection state만 대체합니다. 이 문서의 provider-neutral contract와 fail-closed foundation은 계속 유효합니다.
 
 ## 후보와 기준
 

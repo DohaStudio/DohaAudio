@@ -1,14 +1,14 @@
 # DohaAudio
 
 > 문서 상태: [계획]
-> 구현 상태: Runtime·Pre-Training Readiness·Dataset Admission·Enrollment·Archive Inspection·Path Interpretation·Role Disposition·Semantic Evidence Review·Human Review Workflow·Reviewer Authentication Boundary·Production Auth Design [구현], provider 선택·실제 OAuth/OIDC·reviewer 등록·승인 Dataset·실제 모델·Training [미구현]
+> 구현 상태: Runtime·Pre-Training Readiness·Dataset Admission·Enrollment·Archive Inspection·Path Interpretation·Role Disposition·Semantic Evidence Review·Human Review Workflow·Reviewer Authentication Boundary·Production Auth Selection [구현], delegated assertion adapter·reviewer 등록·승인 Dataset·실제 모델·Training [미구현]
 > 저장소: `DohaStudio/DohaAudio`
 > 공통 명세: `0.1.0` / `draft-baseline`
 > 명세 기준: `DohaStudio/.github` `main` (`1e4b480c8cbd6e51835f8550e685e9b136d8071d`)
 
 DohaAudio는 DohaMusic을 위한 음악 생성 및 일반 Audio AI Provider 프로젝트입니다. Music Generation뿐 아니라 Instrumental Generation, Stem Separation, Music Analysis, Dataset Pipeline, Training, Fine-tuning, Evaluation, Model Manifest와 독립 Runtime을 담당할 계획입니다.
 
-현재 저장소에는 Provider Runtime, Pre-Training Readiness와 Dataset Admission·Enrollment·Archive Membership Inspection·Path Interpretation·Role Disposition·Semantic Evidence Review·Human Review Workflow·Authenticated Reviewer Identity Gate가 구현되어 있습니다. 교체 가능한 in-memory/SQLite Job repository, 단일 Job worker boundary, Dataset Manifest·권리 Gate, 주입식 read-only authority resolver, normalized rights evidence, ZIP central-directory inspection, candidate-bound path·companion·role policy, bounded schema/header evidence, versioned reviewer authority, provider-independent authentication과 private identity mapping 경계, training dry-run을 검증합니다. 실제 OAuth/OIDC provider, 실제 identity mapping·reviewer authority, Dataset, 모델, Checkpoint와 생성 음원은 포함하지 않습니다.
+현재 저장소에는 Provider Runtime, Pre-Training Readiness와 Dataset Admission·Enrollment·Archive Membership Inspection·Path Interpretation·Role Disposition·Semantic Evidence Review·Human Review Workflow·Authenticated Reviewer Identity Gate가 구현되어 있습니다. 교체 가능한 in-memory/SQLite Job repository, 단일 Job worker boundary, Dataset Manifest·권리 Gate, 주입식 read-only authority resolver, normalized rights evidence, ZIP central-directory inspection, candidate-bound path·companion·role policy, bounded schema/header evidence, versioned reviewer authority, provider-independent authentication과 private identity mapping 경계, training dry-run을 검증합니다. DohaMusic V1 authority에 따라 downstream provider model은 `DOHAMUSIC_DELEGATED_ASSERTION`으로 선택됐지만 config·adapter·실제 identity mapping·reviewer authority는 없으며 Dataset, 모델, Checkpoint와 생성 음원도 포함하지 않습니다.
 
 ## 책임
 
@@ -119,7 +119,7 @@ Human Semantic Review Workflow Foundation은 versioned reviewer authority, exact
 
 Authenticated Reviewer Identity Foundation은 provider-independent verification protocol, immutable sanitized principal, provider-issued verification context, private versioned principal→opaque reviewer mapping과 workflow guard를 제공합니다. 인증이 설정된 workflow는 caller-supplied reviewer ID를 신뢰하지 않고 현재 authentication·mapping·ReviewerAuthority를 순서대로 검증합니다. `FakeAuthenticationProvider`는 synthetic test 전용이며 실제 OAuth/OIDC, real identity mapping과 real reviewer authority는 모두 0이므로 production human approval은 계속 비활성화되어 있습니다.
 
-Production Authentication Design은 DohaMusic의 현재 local single-user 제한과 미확정 공개 인증·배포 요구를 근거로 provider 선택을 보류합니다. Secret-free provider config, explicit enablement, fake-production 차단, no-fallback factory, proof를 발급하지 않는 unavailable adapter와 persistent private mapping protocol을 구현했습니다. Provider selection·configuration·operation·mapping·authority·human review는 서로 다른 상태이며 현재 모두 production-disabled입니다.
+Production Authentication Selection은 ADR-014의 historical no-selection과 provider-neutral foundation을 보존하고 DohaMusic ADR-038을 authority로 `DOHAMUSIC_DELEGATED_ASSERTION`만 선택합니다. Current factory state는 `selected=true`, `configured=false`, `operational=false`이고 external identity provider는 null입니다. Secret-free config, fake-production 차단, no-fallback factory, proof를 발급하지 않는 unavailable adapter와 persistent private mapping protocol을 유지합니다. 실제 OS proof, assertion signing·verification, secret, mapping, authority와 human review는 모두 비활성입니다.
 
 ```powershell
 python -m pip install -e ".[dev,runtime]"

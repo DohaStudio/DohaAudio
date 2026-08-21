@@ -41,3 +41,5 @@ Semantic role evidence는 filesystem enumeration 순서가 아닌 opaque archive
 Training readiness는 rights/license/eligibility가 불명확하거나 evidence가 누락·미검토·만료된 경우 `BLOCKED`로 fail-closed 합니다. Dataset license, training permission, commercial usage, redistribution, model/weight license를 하나의 boolean으로 합치지 않습니다.
 
 Reviewer authentication은 provider-independent protocol 뒤에 둡니다. Sanitized principal은 private subject reference만 포함하고 provider가 발급·보관한 verification context를 매 호출마다 재검증합니다. Private mapping registry와 public ReviewerAuthority registry는 분리하며 semantic decision에는 subject·session·issuer·assurance를 복사하지 않습니다. Fake provider는 test-only이고 실제 account authentication을 주장하지 않습니다.
+
+V1 downstream model은 `DOHAMUSIC_DELEGATED_ASSERTION`이며 issuer DohaMusic, audience DohaAudio, short lifetime, freshness·expiry와 replay resistance를 요구합니다. External IdP는 선택하지 않았고 external auth network 없이 offline-capable해야 합니다. Model selection은 adapter 구현이 아니며 config·signing·verification·key·replay cache와 private store는 모두 operational하지 않습니다. DohaMusic service credential을 human reviewer assertion으로 사용하거나 authentication을 mapping·ReviewerAuthority·approval로 승격하지 않습니다.

@@ -5,6 +5,8 @@
 > SQLite Job persistence·Worker execution boundary: [구현]
 > 실제 모델 worker·background daemon: [미구현]
 
+Production reviewer authentication은 `DOHAMUSIC_DELEGATED_ASSERTION` provider model만 선택된 상태입니다. Config와 verification adapter가 없으므로 `AUTH_PROVIDER_CONFIGURED=false`, `AUTH_PROVIDER_OPERATIONAL=false`이며 Runtime API의 인증 활성화를 의미하지 않습니다.
+
 DohaAudio Runtime Foundation은 capability 작업의 계약을 실행하는 독립 Provider Runtime입니다. 현재 `FakeAudioProvider`만 등록되며 실제 모델을 load하거나 외부 Provider를 호출하지 않습니다. DohaMusic만 외부 Orchestrator로서 Runtime을 호출하는 경계를 유지합니다.
 
 ## 구현된 계약
